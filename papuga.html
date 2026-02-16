@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Papuga - Powtarzacz Głosu dla Dzieci</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      user-select: none;
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      height: 100dvh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      width: 100%;
+      max-width: 500px;
+    }
+
+    header {
+      text-align: center;
+      color: white;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      margin-bottom: 4px;
+    }
+
+    header p {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .parrot-area {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 3px solid rgba(255, 255, 255, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .parrot-area.listening {
+      border-color: #ff6b6b;
+      background: rgba(255, 107, 107, 0.1);
+      animation: pulse-listen 1.5s infinite;
+    }
+
+    .parrot-area.playing {
+      border-color: #1dd1a1;
+      background: rgba(29, 209, 161, 0.1);
+      animation: pulse-play 0.6s infinite;
+    }
+
+    .parrot-icon {
+      font-size: 80px;
+      line-height: 1;
+      transition: transform 0.3s ease;
+    }
+
+    .parrot-area.listening .parrot-icon {
+      transform: scale(1.1);
+    }
+
+    .parrot-area.playing .parrot-icon {
+      animation: bounce 0.4s infinite alternate;
+    }
+
+    @keyframes pulse-listen {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.4); }
+      50% { box-shadow: 0 0 0 20px rgba(255, 107, 107, 0); }
+    }
+
+    @keyframes pulse-play {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(29, 209, 161, 0.4); }
+      50% { box-shadow: 0 0 0 15px rgba(29, 209, 161, 0); }
+    }
+
+    @keyframes bounce {
+      from { transform: scale(1) rotate(-5deg); }
+      to { transform: scale(1.15) rotate(5deg); }
+    }
+
+    .status-text {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 1rem;
+      font-weight: 600;
+      text-align: center;
+      min-height: 1.4em;
+    }
+
+    .status-text.active {
+      color: #ff6b6b;
+    }
+
+    .status-text.playing {
+      color: #1dd1a1;
+    }
+
+    .controls {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .filter-btn {
+      padding: 10px 16px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .filter-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .filter-btn.selected {
+      border-color: #48dbfb;
+      background: rgba(72, 219, 251, 0.2);
+      color: #48dbfb;
+    }
+
+    .btn-main {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      border: none;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: white;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      box-shadow: 0 8px 30px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-main:hover {
+      transform: scale(1.05);
+    }
+
+    .btn-main:active {
+      transform: scale(0.97);
+    }
+
+    .btn-main.active {
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+      box-shadow: 0 8px 30px rgba(238, 90, 90, 0.4);
+    }
+
+    .btn-main svg {
+      width: 48px;
+      height: 48px;
+    }
+
+    .volume-bar {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .volume-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #1dd1a1, #48dbfb);
+      border-radius: 3px;
+      transition: width 0.05s;
+    }
+
+    .volume-bar-fill.loud {
+      background: linear-gradient(90deg, #feca57, #ff6b6b);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1>Papuga</h1>
+      <p>Mow do mikrofonu, a papuga powtorzy!</p>
+    </header>
+
+    <div class="parrot-area" id="parrotArea">
+      <span class="parrot-icon">🦜</span>
+    </div>
+
+    <div class="volume-bar">
+      <div class="volume-bar-fill" id="volumeBar"></div>
+    </div>
+
+    <div class="status-text" id="statusText">Nacisnij START zeby zaczac</div>
+
+    <div class="controls">
+      <div class="filter-row" id="filterRow">
+        <button class="filter-btn selected" data-filter="chipmunk">🐿️ Wiewiorka</button>
+        <button class="filter-btn" data-filter="deep">🐻 Mis</button>
+        <button class="filter-btn" data-filter="robot">🤖 Robot</button>
+        <button class="filter-btn" data-filter="echo">🏔️ Echo</button>
+        <button class="filter-btn" data-filter="reverse">⏪ Wspak</button>
+      </div>
+    </div>
+
+    <button class="btn-main" id="mainBtn" onclick="toggleListening()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+        <line x1="12" y1="19" x2="12" y2="23"/>
+        <line x1="8" y1="23" x2="16" y2="23"/>
+      </svg>
+      START
+    </button>
+  </div>
+
+  <script>
+    let audioContext = null;
+    let mediaStream = null;
+    let analyser = null;
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let isListening = false;
+    let isSpeaking = false;
+    let isPlaying = false;
+    let silenceTimer = null;
+    let selectedFilter = 'chipmunk';
+    let animFrameId = null;
+
+    const SILENCE_THRESHOLD = 15;
+    const SILENCE_DELAY_MS = 1200;
+    const MIN_RECORDING_MS = 300;
+
+    let speakStartTime = 0;
+
+    const parrotArea = document.getElementById('parrotArea');
+    const volumeBar = document.getElementById('volumeBar');
+    const statusText = document.getElementById('statusText');
+    const mainBtn = document.getElementById('mainBtn');
+    const filterRow = document.getElementById('filterRow');
+
+    // Filter selection
+    filterRow.addEventListener('click', (e) => {
+      const btn = e.target.closest('.filter-btn');
+      if (!btn) return;
+      filterRow.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedFilter = btn.dataset.filter;
+    });
+
+    async function toggleListening() {
+      if (isListening) {
+        stopListening();
+      } else {
+        await startListening();
+      }
+    }
+
+    async function startListening() {
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const source = audioContext.createMediaStreamSource(mediaStream);
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 512;
+        source.connect(analyser);
+
+        isListening = true;
+        isSpeaking = false;
+        recordedChunks = [];
+
+        mainBtn.classList.add('active');
+        mainBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="6" y="6" width="12" height="12" rx="2"/>
+          </svg>
+          STOP`;
+
+        setStatus('Slucham... mow cos!', 'active');
+        monitorVolume();
+      } catch (err) {
+        setStatus('Brak dostepu do mikrofonu!', '');
+        console.error('Microphone error:', err);
+      }
+    }
+
+    function stopListening() {
+      isListening = false;
+      isSpeaking = false;
+
+      if (silenceTimer) {
+        clearTimeout(silenceTimer);
+        silenceTimer = null;
+      }
+
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+      }
+
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(t => t.stop());
+        mediaStream = null;
+      }
+
+      if (animFrameId) {
+        cancelAnimationFrame(animFrameId);
+        animFrameId = null;
+      }
+
+      if (audioContext) {
+        audioContext.close();
+        audioContext = null;
+      }
+
+      recordedChunks = [];
+
+      parrotArea.classList.remove('listening', 'playing');
+      volumeBar.style.width = '0%';
+      volumeBar.classList.remove('loud');
+
+      mainBtn.classList.remove('active');
+      mainBtn.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          <line x1="12" y1="19" x2="12" y2="23"/>
+          <line x1="8" y1="23" x2="16" y2="23"/>
+        </svg>
+        START`;
+
+      setStatus('Nacisnij START zeby zaczac', '');
+    }
+
+    function monitorVolume() {
+      if (!isListening || !analyser) return;
+
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      analyser.getByteFrequencyData(data);
+
+      let sum = 0;
+      for (let i = 0; i < data.length; i++) sum += data[i];
+      const avg = sum / data.length;
+
+      // Update volume bar
+      const pct = Math.min(100, (avg / 80) * 100);
+      volumeBar.style.width = pct + '%';
+      if (avg > 50) {
+        volumeBar.classList.add('loud');
+      } else {
+        volumeBar.classList.remove('loud');
+      }
+
+      if (!isPlaying) {
+        if (avg > SILENCE_THRESHOLD) {
+          // Sound detected
+          if (!isSpeaking) {
+            startRecording();
+            isSpeaking = true;
+            parrotArea.classList.add('listening');
+            setStatus('Nagrywam...', 'active');
+          }
+          // Reset silence timer
+          if (silenceTimer) {
+            clearTimeout(silenceTimer);
+            silenceTimer = null;
+          }
+        } else if (isSpeaking) {
+          // Silence detected while speaking
+          if (!silenceTimer) {
+            silenceTimer = setTimeout(() => {
+              onSilenceDetected();
+            }, SILENCE_DELAY_MS);
+          }
+        }
+      }
+
+      animFrameId = requestAnimationFrame(monitorVolume);
+    }
+
+    function startRecording() {
+      recordedChunks = [];
+      speakStartTime = Date.now();
+
+      mediaRecorder = new MediaRecorder(mediaStream, { mimeType: getSupportedMimeType() });
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) recordedChunks.push(e.data);
+      };
+      mediaRecorder.onstop = () => {
+        if (recordedChunks.length > 0 && (Date.now() - speakStartTime) >= MIN_RECORDING_MS) {
+          const blob = new Blob(recordedChunks, { type: recordedChunks[0].type });
+          playWithFilter(blob);
+        }
+      };
+      mediaRecorder.start(100);
+    }
+
+    function getSupportedMimeType() {
+      const types = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'];
+      for (const type of types) {
+        if (MediaRecorder.isTypeSupported(type)) return type;
+      }
+      return '';
+    }
+
+    function onSilenceDetected() {
+      silenceTimer = null;
+      isSpeaking = false;
+      parrotArea.classList.remove('listening');
+
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+      }
+    }
+
+    async function playWithFilter(blob) {
+      if (!isListening) return;
+
+      isPlaying = true;
+      parrotArea.classList.add('playing');
+      setStatus('Papuga powtarza!', 'playing');
+
+      try {
+        const playCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const arrayBuffer = await blob.arrayBuffer();
+        const audioBuffer = await playCtx.decodeAudioData(arrayBuffer);
+
+        let processedBuffer = audioBuffer;
+
+        if (selectedFilter === 'reverse') {
+          processedBuffer = reverseBuffer(playCtx, audioBuffer);
+        }
+
+        const source = playCtx.createBufferSource();
+        source.buffer = processedBuffer;
+
+        // Apply filter based on selection
+        let lastNode = source;
+
+        switch (selectedFilter) {
+          case 'chipmunk':
+            source.playbackRate.value = 1.8;
+            break;
+          case 'deep':
+            source.playbackRate.value = 0.55;
+            break;
+          case 'robot': {
+            // Ring modulation effect for robot voice
+            const oscillator = playCtx.createOscillator();
+            oscillator.type = 'square';
+            oscillator.frequency.value = 50;
+            const gainMod = playCtx.createGain();
+            gainMod.gain.value = 0;
+            oscillator.connect(gainMod.gain);
+            oscillator.start();
+
+            const waveshaper = playCtx.createWaveShaper();
+            const curve = new Float32Array(256);
+            for (let i = 0; i < 256; i++) {
+              const x = (i / 128) - 1;
+              curve[i] = Math.sign(x) * Math.pow(Math.abs(x), 0.5);
+            }
+            waveshaper.curve = curve;
+
+            source.connect(waveshaper);
+            waveshaper.connect(gainMod);
+            lastNode = gainMod;
+
+            source.onended = () => oscillator.stop();
+            break;
+          }
+          case 'echo': {
+            const delay1 = playCtx.createDelay(1.0);
+            delay1.delayTime.value = 0.25;
+            const feedback1 = playCtx.createGain();
+            feedback1.gain.value = 0.5;
+
+            const delay2 = playCtx.createDelay(1.0);
+            delay2.delayTime.value = 0.5;
+            const feedback2 = playCtx.createGain();
+            feedback2.gain.value = 0.3;
+
+            const merger = playCtx.createGain();
+            merger.gain.value = 1;
+
+            source.connect(merger);
+            source.connect(delay1);
+            delay1.connect(feedback1);
+            feedback1.connect(merger);
+            feedback1.connect(delay1);
+            source.connect(delay2);
+            delay2.connect(feedback2);
+            feedback2.connect(merger);
+
+            lastNode = merger;
+            break;
+          }
+          case 'reverse':
+            // Buffer already reversed above
+            break;
+        }
+
+        lastNode.connect(playCtx.destination);
+
+        source.start(0);
+
+        // Calculate playback duration
+        let duration = processedBuffer.duration;
+        if (selectedFilter === 'chipmunk') duration /= 1.8;
+        else if (selectedFilter === 'deep') duration /= 0.55;
+        if (selectedFilter === 'echo') duration += 1.0;
+
+        source.onended = () => {
+          // Give echo some time to fade
+          const extraTime = selectedFilter === 'echo' ? 1200 : 100;
+          setTimeout(() => {
+            isPlaying = false;
+            parrotArea.classList.remove('playing');
+            if (isListening) {
+              setStatus('Slucham... mow cos!', 'active');
+            }
+            playCtx.close();
+          }, extraTime);
+        };
+
+      } catch (err) {
+        console.error('Playback error:', err);
+        isPlaying = false;
+        parrotArea.classList.remove('playing');
+        if (isListening) {
+          setStatus('Slucham... mow cos!', 'active');
+        }
+      }
+    }
+
+    function reverseBuffer(ctx, buffer) {
+      const reversed = ctx.createBuffer(
+        buffer.numberOfChannels,
+        buffer.length,
+        buffer.sampleRate
+      );
+      for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+        const input = buffer.getChannelData(ch);
+        const output = reversed.getChannelData(ch);
+        for (let i = 0; i < input.length; i++) {
+          output[i] = input[input.length - 1 - i];
+        }
+      }
+      return reversed;
+    }
+
+    function setStatus(text, cls) {
+      statusText.textContent = text;
+      statusText.className = 'status-text';
+      if (cls) statusText.classList.add(cls);
+    }
+  </script>
+</body>
+
+</html>
