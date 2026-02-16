@@ -1,0 +1,2236 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Klawiatura Dźwiękowa dla Dzieci</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      height: 100dvh; /* Dynamic viewport height - accounts for mobile browser UI */
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      padding: 8px;
+    }
+
+    /* Remove padding in fullscreen to eliminate white borders */
+    body:fullscreen {
+      padding: 0;
+    }
+
+    body:-webkit-full-screen {
+      padding: 0;
+    }
+
+    body:-moz-full-screen {
+      padding: 0;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+      margin: 0;
+    }
+
+    header {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      margin-bottom: 12px;
+      flex-shrink: 0;
+    }
+
+    .controls {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 15px;
+      box-shadow: none;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      flex-shrink: 0;
+    }
+
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+
+    .controls-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: row;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .control-group label {
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.7);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    input[type="number"],
+    input[type="text"],
+    input[type="color"] {
+      padding: 10px 14px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      font-size: 1rem;
+      transition: all 0.3s;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      -webkit-user-select: text;
+      -moz-user-select: text;
+      -ms-user-select: text;
+      user-select: text;
+    }
+
+    input[type="number"]:focus,
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #48dbfb;
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    input[type="number"] {
+      width: 80px;
+    }
+
+    input[type="color"] {
+      width: 50px;
+      height: 42px;
+      padding: 3px;
+      cursor: pointer;
+      border-radius: 10px;
+    }
+
+    .btn {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(238, 90, 90, 0.5);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #1dd1a1 0%, #10ac84 100%);
+      color: white;
+    }
+
+    .btn-success:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(29, 209, 161, 0.5);
+    }
+
+    .btn-warning {
+      background: linear-gradient(135deg, #feca57 0%, #ff9f43 100%);
+      color: #333;
+    }
+
+    .btn-warning:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(254, 202, 87, 0.5);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .keyboard-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: stretch;
+      min-height: 0;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .keyboard {
+      display: flex;
+      gap: 3px;
+      justify-content: stretch;
+      align-items: stretch;
+      padding: 0;
+      background: transparent;
+      border-radius: 0;
+      box-shadow: none;
+      border: none;
+      width: 100%;
+    }
+
+    .key {
+      flex: 1;
+      min-width: 40px;
+      background: linear-gradient(180deg, #fefefe 0%, #e8e8e8 30%, #d4d4d4 100%);
+      border: none;
+      border-radius: 0 0 10px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 12px 4px;
+      cursor: pointer;
+      transition: all 0.1s ease;
+      box-shadow:
+        0 10px 20px rgba(0, 0, 0, 0.3),
+        inset 0 -3px 0 #bbb,
+        inset 0 1px 0 #fff;
+      user-select: none;
+      position: relative;
+      overflow: visible;
+    }
+
+    .key::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 8px;
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, transparent 100%);
+      border-radius: 0;
+    }
+
+    .key:active,
+    .key.playing {
+      transform: translateY(4px);
+    }
+
+    /* Only apply default shadow to keys without custom colors */
+    .key:not([data-custom-color]):active,
+    .key:not([data-custom-color]).playing {
+      box-shadow:
+        0 5px 10px rgba(0, 0, 0, 0.3),
+        inset 0 -1px 0 #bbb,
+        inset 0 1px 0 #fff;
+    }
+
+    .key.has-sound:not([data-custom-color]) {
+      background: linear-gradient(180deg, #e8fff0 0%, #c8f7d6 30%, #a8e6be 100%);
+      box-shadow:
+        0 10px 20px rgba(0, 0, 0, 0.3),
+        inset 0 -3px 0 #7dcea0,
+        inset 0 1px 0 #fff,
+        0 0 20px rgba(29, 209, 161, 0.3);
+    }
+
+    .key.has-sound:not([data-custom-color]):active,
+    .key.has-sound:not([data-custom-color]).playing {
+      box-shadow:
+        0 5px 10px rgba(0, 0, 0, 0.3),
+        inset 0 -1px 0 #7dcea0,
+        inset 0 1px 0 #fff;
+    }
+
+    .key.recording {
+      animation: pulse 1s infinite;
+      background: linear-gradient(180deg, #ffe8e8 0%, #ffc8c8 30%, #ffb0b0 100%);
+    }
+
+    .key-record-indicator {
+      position: absolute;
+      top: 10px;
+      left: 8px;
+      color: #ff6b6b;
+    }
+
+    .key-record-indicator svg {
+      width: 18px;
+      height: 18px;
+      animation: blink 0.8s infinite;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.3;
+      }
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.5), 0 10px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      50% {
+        box-shadow: 0 0 0 12px rgba(255, 107, 107, 0), 0 10px 20px rgba(0, 0, 0, 0.3);
+      }
+    }
+
+    .key-name {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: clamp(0.4rem, 2vw, 1rem);
+      font-weight: 700;
+      color: #333;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+      writing-mode: vertical-rl;
+      text-orientation: upright;
+      text-transform: uppercase;
+      max-height: calc(100% - 90px);
+      overflow: hidden;
+      line-height: 1;
+      letter-spacing: 0.5px;
+      word-break: break-all;
+    }
+
+    .key-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: center;
+      position: absolute;
+      left: 50%;
+      bottom: 12px;
+      transform: translateX(-50%);
+    }
+
+    .key-btn {
+      padding: 8px;
+      border: none;
+      backdrop-filter: blur(4px);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.95;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .key-btn svg {
+      width: 22px;
+      height: 22px;
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+    }
+
+    .key-btn:hover {
+      opacity: 1;
+      transform: scale(1.15);
+    }
+
+    .key-btn:active {
+      transform: scale(0.9);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: linear-gradient(180deg, #2d2d44 0%, #1a1a2e 100%);
+      border-radius: 20px;
+      padding: 25px;
+      max-width: 400px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      transform: scale(0.9);
+      transition: transform 0.3s;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    .modal-overlay.active .modal {
+      transform: scale(1);
+    }
+
+    .modal h2 {
+      margin-bottom: 20px;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .modal h2 svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .modal-group {
+      margin-bottom: 15px;
+    }
+
+    .modal-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .modal-group input[type="text"],
+    .modal-group input[type="range"] {
+      width: 100%;
+    }
+
+    .modal-group input[type="range"] {
+      margin-top: 8px;
+      accent-color: #48dbfb;
+      height: 12px;
+      cursor: pointer;
+    }
+
+    .modal-group input[type="range"]::-webkit-slider-thumb {
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+    }
+
+    .modal-group input[type="range"]::-moz-range-thumb {
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+    }
+
+    .range-value {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #48dbfb;
+      font-weight: 600;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 25px;
+    }
+
+    .recording-indicator {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 15px;
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+      color: white;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      animation: pulse 1s infinite;
+    }
+
+    .recording-indicator svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .recording-indicator span {
+      font-weight: 600;
+    }
+
+    .countdown-display {
+      font-size: 8rem;
+      font-weight: 900;
+      color: white;
+      text-align: center;
+      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      animation: countdownPulse 1s ease-in-out;
+    }
+
+    @keyframes countdownPulse {
+      0% {
+        transform: scale(0.5);
+        opacity: 0;
+      }
+      50% {
+        transform: scale(1.1);
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .info-text {
+      text-align: center;
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 0.85rem;
+      margin-top: 12px;
+      flex-shrink: 0;
+    }
+
+    /* Effects panel */
+    .effects-panel {
+      background: transparent;
+      border-radius: 0;
+      padding: 0;
+      margin-top: 12px;
+    }
+
+    .effects-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 16px;
+    }
+
+    .effect-slider {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .effect-slider label {
+      min-width: 70px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+
+    .effect-slider input[type="range"] {
+      flex: 1;
+      accent-color: #48dbfb;
+      height: 12px;
+      cursor: pointer;
+    }
+
+    .effect-slider input[type="range"]::-webkit-slider-thumb {
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+    }
+
+    .effect-slider input[type="range"]::-moz-range-thumb {
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+    }
+
+    .effect-slider .value {
+      min-width: 50px;
+      text-align: center;
+      font-weight: 600;
+      color: #48dbfb;
+      font-size: 0.9rem;
+    }
+
+    /* Mode toggle */
+    .mode-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: transparent;
+      padding: 0;
+      border-radius: 0;
+      border: none;
+    }
+
+    .mode-toggle label {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.8);
+      font-weight: 600;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 56px;
+      height: 28px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .toggle-switch.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .toggle-slider {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 22px;
+      height: 22px;
+      background: white;
+      border-radius: 50%;
+      transition: all 0.3s;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .toggle-switch.active .toggle-slider {
+      transform: translateX(28px);
+    }
+
+    /* Play mode - hide editing controls */
+    body.play-mode .key-actions {
+      display: none;
+    }
+
+    body.play-mode .controls {
+      display: none;
+    }
+
+    /* Responsive adjustments */
+    @media (max-height: 700px) {
+      body {
+        padding: 10px;
+      }
+
+      header {
+        margin-bottom: 8px;
+      }
+
+      header h1 {
+        font-size: 1.3rem;
+      }
+
+      .controls {
+        padding: 12px;
+        margin-bottom: 10px;
+      }
+
+      .keyboard {
+        padding: 15px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .btn {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+      }
+
+      .key {
+        min-width: 40px;
+      }
+
+      .key-btn svg {
+        width: 18px;
+        height: 18px;
+      }
+
+      .key-btn {
+        padding: 6px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <div class="mode-toggle">
+        <label>Tryb</label>
+        <div class="toggle-switch" id="modeToggle" onclick="toggleMode()">
+          <div class="toggle-slider"></div>
+        </div>
+        <span id="modeLabel" style="color: rgba(255, 255, 255, 0.9); font-weight: 600; min-width: 80px;">Edycja</span>
+      </div>
+      <button class="btn btn-primary" id="fullscreenBtn" onclick="toggleFullscreen()" style="margin-left: 12px;">
+        <svg id="fullscreenIcon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+        </svg>
+        <span id="fullscreenLabel">Pełny ekran</span>
+      </button>
+    </header>
+
+    <div class="controls">
+      <div class="controls-row">
+        <div class="control-group">
+          <label>Liczba klawiszy</label>
+          <input type="number" id="keyCount" min="1" max="50" value="17" onchange="updateKeyCount()">
+        </div>
+        <button class="btn btn-danger" onclick="clearAllSounds()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18" />
+            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+            <line x1="10" x2="10" y1="11" y2="17" />
+            <line x1="14" x2="14" y1="11" y2="17" />
+          </svg>
+          Wyczyść wszystko
+        </button>
+        <button class="btn btn-success" onclick="exportData()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" x2="12" y1="3" y2="15" />
+          </svg>
+          Eksportuj
+        </button>
+        <button class="btn btn-warning" onclick="document.getElementById('importFile').click()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" x2="12" y1="15" y2="3" />
+          </svg>
+          Importuj
+        </button>
+        <button class="btn btn-warning" onclick="resetGlobalEffects()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+            <path d="M21 3v5h-5" />
+            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+            <path d="M3 21v-5h5" />
+          </svg>
+          Resetuj efekty
+        </button>
+        <button class="btn btn-primary" id="trimToggleBtn" onclick="toggleTrimSilence()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" x2="12" y1="19" y2="22"/>
+            <path d="M3 12h3M18 12h3"/>
+          </svg>
+          <span id="trimToggleLabel">Przycinanie ciszy: ON</span>
+        </button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+      </div>
+
+      <div class="effects-panel">
+        <div class="effects-grid">
+          <div class="effect-slider">
+            <label>Tonacja</label>
+            <input type="range" id="globalPitch" min="0.5" max="2" step="0.1" value="1" oninput="updateEffectDisplay('pitch')">
+            <span class="value" id="pitchValue">1.0x</span>
+          </div>
+          <div class="effect-slider">
+            <label>Prędkość</label>
+            <input type="range" id="globalSpeed" min="0.25" max="2" step="0.05" value="1" oninput="updateEffectDisplay('speed')">
+            <span class="value" id="speedValue">1.0x</span>
+          </div>
+          <div class="effect-slider">
+            <label>Pogłos</label>
+            <input type="range" id="globalReverb" min="0" max="1" step="0.1" value="0" oninput="updateEffectDisplay('reverb')">
+            <span class="value" id="reverbValue">0%</span>
+          </div>
+          <div class="effect-slider">
+            <label>Echo</label>
+            <input type="range" id="globalEcho" min="0" max="1" step="0.1" value="0" oninput="updateEffectDisplay('echo')">
+            <span class="value" id="echoValue">0%</span>
+          </div>
+          <div class="effect-slider">
+            <label>Zniekształc.</label>
+            <input type="range" id="globalDistortion" min="0" max="100" step="5" value="0" oninput="updateEffectDisplay('distortion')">
+            <span class="value" id="distortionValue">0</span>
+          </div>
+          <div class="effect-slider">
+            <label>Tremolo</label>
+            <input type="range" id="globalTremolo" min="0" max="1" step="0.1" value="0" oninput="updateEffectDisplay('tremolo')">
+            <span class="value" id="tremoloValue">0%</span>
+          </div>
+          <div class="effect-slider">
+            <label>Filtr</label>
+            <input type="range" id="globalLowpass" min="0" max="1" step="0.1" value="0" oninput="updateEffectDisplay('lowpass')">
+            <span class="value" id="lowpassValue">0%</span>
+          </div>
+          <div class="effect-slider">
+            <label>Bit Crush</label>
+            <input type="range" id="globalBitcrusher" min="0" max="1" step="0.1" value="0" oninput="updateEffectDisplay('bitcrusher')">
+            <span class="value" id="bitcrusherValue">0%</span>
+          </div>
+          <div class="effect-slider" style="grid-column: 1 / -1;">
+            <label>Odwróć</label>
+            <input type="checkbox" id="globalReverse" onchange="updateEffectDisplay('reverse')" style="width: 32px; height: 32px; cursor: pointer;">
+            <span class="value" id="reverseValue">OFF</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="keyboard-wrapper">
+      <div class="keyboard" id="keyboard"></div>
+    </div>
+  </div>
+
+  <!-- Edit Key Modal -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal">
+      <h2>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+          <path d="m15 5 4 4" />
+        </svg>
+        Edytuj klawisz
+      </h2>
+      <div class="modal-group">
+        <label>Nazwa klawisza</label>
+        <input type="text" id="editKeyName" placeholder="Wpisz nazwę...">
+      </div>
+      <div class="modal-group">
+        <label>Kolor klawisza</label>
+        <input type="color" id="editKeyColor" value="#ffffff">
+      </div>
+      <div class="modal-group">
+        <label>Tonacja: <span id="editPitchValue">1.0x</span></label>
+        <input type="range" id="editKeyPitch" min="0.5" max="2" step="0.1" value="1" oninput="document.getElementById('editPitchValue').textContent = this.value + 'x'">
+      </div>
+      <div class="modal-group">
+        <label>Prędkość: <span id="editSpeedValue">1.0x</span></label>
+        <input type="range" id="editKeySpeed" min="0.25" max="2" step="0.05" value="1" oninput="document.getElementById('editSpeedValue').textContent = this.value + 'x'">
+      </div>
+      <div class="modal-group">
+        <label>Pogłos: <span id="editReverbValue">0%</span></label>
+        <input type="range" id="editKeyReverb" min="0" max="1" step="0.1" value="0" oninput="document.getElementById('editReverbValue').textContent = Math.round(this.value * 100) + '%'">
+      </div>
+      <div class="modal-group">
+        <label>Zniekształcenie: <span id="editDistortionValue">0</span></label>
+        <input type="range" id="editKeyDistortion" min="0" max="100" step="5" value="0" oninput="document.getElementById('editDistortionValue').textContent = this.value">
+      </div>
+      <div class="modal-group">
+        <label>Echo: <span id="editEchoValue">0%</span></label>
+        <input type="range" id="editKeyEcho" min="0" max="1" step="0.1" value="0" oninput="document.getElementById('editEchoValue').textContent = Math.round(this.value * 100) + '%'">
+      </div>
+      <div class="modal-group">
+        <label>Tremolo: <span id="editTremoloValue">0%</span></label>
+        <input type="range" id="editKeyTremolo" min="0" max="1" step="0.1" value="0" oninput="document.getElementById('editTremoloValue').textContent = Math.round(this.value * 100) + '%'">
+      </div>
+      <div class="modal-group">
+        <label>Filtr (Przytłumienie): <span id="editLowpassValue">0%</span></label>
+        <input type="range" id="editKeyLowpass" min="0" max="1" step="0.1" value="0" oninput="document.getElementById('editLowpassValue').textContent = Math.round(this.value * 100) + '%'">
+      </div>
+      <div class="modal-group">
+        <label>Bit Crusher: <span id="editBitcrusherValue">0%</span></label>
+        <input type="range" id="editKeyBitcrusher" min="0" max="1" step="0.1" value="0" oninput="document.getElementById('editBitcrusherValue').textContent = Math.round(this.value * 100) + '%'">
+      </div>
+      <div class="modal-group">
+        <label>Odwróć dźwięk</label>
+        <input type="checkbox" id="editKeyReverse" style="width: 32px; height: 32px; cursor: pointer;">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-warning" onclick="resetKeyEffects()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+            <path d="M21 3v5h-5" />
+            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+            <path d="M3 21v-5h5" />
+          </svg>
+          Reset
+        </button>
+        <button class="btn btn-danger" onclick="closeEditModal()">Anuluj</button>
+        <button class="btn btn-success" onclick="saveKeyEdit()">Zapisz</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recording Modal -->
+  <div class="modal-overlay" id="recordModal">
+    <div class="modal">
+      <h2>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+          <line x1="12" x2="12" y1="19" y2="22" />
+        </svg>
+        Nagrywanie dźwięku
+      </h2>
+      <div class="recording-indicator" id="recordingIndicator" style="display:none;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+          <circle cx="12" cy="12" r="10" />
+        </svg>
+        <span>Nagrywanie...</span>
+      </div>
+      <p id="recordStatus">Naciśnij Start, aby rozpocząć nagrywanie. Naciśnij Stop, gdy skończysz.</p>
+      <div class="modal-actions">
+        <button class="btn btn-danger" onclick="closeRecordModal()">Anuluj</button>
+        <button class="btn btn-success" id="recordStartBtn" onclick="startRecording()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+            <circle cx="12" cy="12" r="10" />
+          </svg>
+          Start
+        </button>
+        <button class="btn btn-primary" id="recordStopBtn" onclick="stopRecording()" style="display:none;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="14" height="14" x="5" y="5" rx="2" />
+          </svg>
+          Stop
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Database setup
+    const DB_NAME = 'SoundKeyboardDB';
+    const DB_VERSION = 1;
+    const STORE_NAME = 'sounds';
+    const CONFIG_STORE = 'config';
+
+    let db = null;
+    let audioContext = null;
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let currentRecordingKey = null;
+    let currentEditingKey = null;
+    let keyData = {};
+    let keyCount = 17;
+    let isPlayMode = false;
+    let trimSilenceEnabled = true;
+    let activeSources = []; // Track active audio sources
+    const MAX_SIMULTANEOUS_SOUNDS = 8; // Limit concurrent sounds
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', async () => {
+      await initDB();
+      await loadConfig();
+      await loadKeyData();
+      renderKeyboard();
+      initAudioContext();
+    });
+
+    // Initialize IndexedDB
+    function initDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          db = request.result;
+          resolve(db);
+        };
+
+        request.onupgradeneeded = (event) => {
+          const database = event.target.result;
+
+          if (!database.objectStoreNames.contains(STORE_NAME)) {
+            database.createObjectStore(STORE_NAME, { keyPath: 'keyId' });
+          }
+          if (!database.objectStoreNames.contains(CONFIG_STORE)) {
+            database.createObjectStore(CONFIG_STORE, { keyPath: 'id' });
+          }
+        };
+      });
+    }
+
+    // Initialize Audio Context
+    function initAudioContext() {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    // Ensure audio context is resumed (browser autoplay policy)
+    function ensureAudioContext() {
+      if (audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+    }
+
+    // Load configuration
+    async function loadConfig() {
+      return new Promise((resolve) => {
+        const transaction = db.transaction([CONFIG_STORE], 'readonly');
+        const store = transaction.objectStore(CONFIG_STORE);
+        const request = store.get('keyCount');
+
+        request.onsuccess = () => {
+          if (request.result) {
+            keyCount = request.result.value;
+            document.getElementById('keyCount').value = keyCount;
+          }
+          resolve();
+        };
+        request.onerror = () => resolve();
+      });
+    }
+
+    // Save configuration
+    async function saveConfig() {
+      return new Promise((resolve) => {
+        const transaction = db.transaction([CONFIG_STORE], 'readwrite');
+        const store = transaction.objectStore(CONFIG_STORE);
+        store.put({ id: 'keyCount', value: keyCount });
+        transaction.oncomplete = () => resolve();
+      });
+    }
+
+    // Load all key data
+    async function loadKeyData() {
+      return new Promise((resolve) => {
+        const transaction = db.transaction([STORE_NAME], 'readonly');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.getAll();
+
+        request.onsuccess = () => {
+          keyData = {};
+          request.result.forEach(item => {
+            keyData[item.keyId] = item;
+          });
+          resolve();
+        };
+        request.onerror = () => resolve();
+      });
+    }
+
+    // Save key data
+    async function saveKeyData(keyId, data) {
+      return new Promise((resolve) => {
+        const transaction = db.transaction([STORE_NAME], 'readwrite');
+        const store = transaction.objectStore(STORE_NAME);
+        store.put({ keyId, ...data });
+        transaction.oncomplete = () => {
+          keyData[keyId] = { keyId, ...data };
+          resolve();
+        };
+      });
+    }
+
+    // Delete key data
+    async function deleteKeyData(keyId) {
+      return new Promise((resolve) => {
+        const transaction = db.transaction([STORE_NAME], 'readwrite');
+        const store = transaction.objectStore(STORE_NAME);
+        store.delete(keyId);
+        transaction.oncomplete = () => {
+          delete keyData[keyId];
+          resolve();
+        };
+      });
+    }
+
+    // Render keyboard
+    function renderKeyboard() {
+      const keyboard = document.getElementById('keyboard');
+      keyboard.innerHTML = '';
+
+      // SVG icons
+      const icons = {
+        volume: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>',
+        mic: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>',
+        refresh: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>',
+        edit: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>',
+        trash: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>',
+        record: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="8"/></svg>'
+      };
+
+      for (let i = 0; i < keyCount; i++) {
+        const keyId = `key-${i}`;
+        const data = keyData[keyId] || {};
+        const hasSound = !!data.audioData;
+        const keyName = data.name || `Klawisz ${i + 1}`;
+        const keyColor = data.color || '#ffffff';
+        const pitch = data.pitch || 1;
+        const speed = data.speed || 1;
+
+        const keyEl = document.createElement('div');
+        keyEl.className = `key ${hasSound ? 'has-sound' : ''}`;
+        keyEl.id = keyId;
+
+        // Calculate contrasting color for icons
+        const iconColor = getContrastColor(keyColor);
+
+        // Apply custom color while maintaining piano key gradient look
+        if (data.color && data.color !== '#ffffff') {
+          keyEl.setAttribute('data-custom-color', 'true');
+          keyEl.style.setProperty('background', `linear-gradient(180deg, ${keyColor} 0%, ${adjustColor(keyColor, -15)} 30%, ${adjustColor(keyColor, -30)} 100%)`, 'important');
+
+          // Apply 3D effect with black inset shadow (works for all colors)
+          if (hasSound) {
+            // Keys with sound get glow effect using the key color directly
+            keyEl.style.setProperty('box-shadow', `0 10px 20px rgba(0,0,0,0.3), inset 0 -3px 0 rgba(0,0,0,0.4), 0 0 20px ${hexToRgba(keyColor, 0.4)}`, 'important');
+          } else {
+            // Keys without sound get just the 3D border effect
+            keyEl.style.setProperty('box-shadow', `0 10px 20px rgba(0,0,0,0.3), inset 0 -3px 0 rgba(0,0,0,0.4)`, 'important');
+          }
+        }
+
+        // Create semi-transparent background color from key color
+        const bgColor = hexToRgba(keyColor, 0.4);
+
+        keyEl.innerHTML = `
+                    <span class="key-name" style="color: ${getContrastColor(keyColor)}">${escapeHtml(keyName)}</span>
+                    <div class="key-actions">
+                        ${hasSound ? `<button class="key-btn key-btn-sound" data-key-id="${keyId}" title="Dźwięk zapisany" style="color: ${iconColor}; background: ${bgColor};">${icons.volume}</button>` : ''}
+                        <button class="key-btn key-btn-record" data-key-id="${keyId}" title="${hasSound ? 'Nagraj ponownie' : 'Nagraj'}" style="color: ${iconColor}; background: ${bgColor};">
+                            ${icons.mic}
+                        </button>
+                        <button class="key-btn key-btn-edit" data-key-id="${keyId}" title="Edytuj" style="color: ${iconColor}; background: ${bgColor};">
+                            ${icons.edit}
+                        </button>
+                        ${hasSound ? `<button class="key-btn key-btn-delete" data-key-id="${keyId}" title="Usuń" style="color: ${iconColor}; background: ${bgColor};">${icons.trash}</button>` : ''}
+                    </div>
+                `;
+
+        // Add event listeners to buttons for both click and touch
+        const recordBtn = keyEl.querySelector('.key-btn-record');
+        const editBtn = keyEl.querySelector('.key-btn-edit');
+        const deleteBtn = keyEl.querySelector('.key-btn-delete');
+
+        if (recordBtn) {
+          recordBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openRecordModal(keyId);
+          });
+          recordBtn.addEventListener('touchend', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            openRecordModal(keyId);
+          });
+        }
+
+        if (editBtn) {
+          editBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openEditModal(keyId);
+          });
+          editBtn.addEventListener('touchend', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            openEditModal(keyId);
+          });
+        }
+
+        if (deleteBtn) {
+          deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteSound(keyId);
+          });
+          deleteBtn.addEventListener('touchend', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            deleteSound(keyId);
+          });
+        }
+
+        // Store original shadow for restoration (after custom shadows are set)
+        const originalShadow = data.color && data.color !== '#ffffff'
+          ? (hasSound
+            ? `0 10px 20px rgba(0,0,0,0.3), inset 0 -3px 0 rgba(0,0,0,0.4), 0 0 20px ${hexToRgba(keyColor, 0.4)}`
+            : `0 10px 20px rgba(0,0,0,0.3), inset 0 -3px 0 rgba(0,0,0,0.4)`)
+          : null;
+
+        // Mouse events
+        keyEl.addEventListener('mousedown', (e) => {
+          // Don't trigger if clicking on action buttons
+          if (!e.target.closest('.key-btn')) {
+            keyEl.classList.add('playing');
+            // Adjust shadow for pressed state with black inset shadow
+            if (data.color && data.color !== '#ffffff') {
+              keyEl.style.setProperty('box-shadow', `0 5px 10px rgba(0,0,0,0.3), inset 0 -1px 0 rgba(0,0,0,0.4)${hasSound ? `, 0 0 20px ${hexToRgba(keyColor, 0.4)}` : ''}`, 'important');
+            }
+            playSound(keyId);
+          }
+        });
+
+        keyEl.addEventListener('mouseup', () => {
+          keyEl.classList.remove('playing');
+          // Restore original shadow
+          if (data.color && data.color !== '#ffffff') {
+            keyEl.style.setProperty('box-shadow', originalShadow, 'important');
+          }
+        });
+
+        keyEl.addEventListener('mouseleave', () => {
+          keyEl.classList.remove('playing');
+          // Restore original shadow
+          if (data.color && data.color !== '#ffffff') {
+            keyEl.style.setProperty('box-shadow', originalShadow, 'important');
+          }
+        });
+
+        // Touch events
+        keyEl.addEventListener('touchstart', (e) => {
+          // Check if touch is on a button or its child elements
+          const isButton = e.target.closest('.key-btn');
+
+          if (!isButton) {
+            e.preventDefault();
+            keyEl.classList.add('playing');
+            // Adjust shadow for pressed state with black inset shadow
+            if (data.color && data.color !== '#ffffff') {
+              keyEl.style.setProperty('box-shadow', `0 5px 10px rgba(0,0,0,0.3), inset 0 -1px 0 rgba(0,0,0,0.4)${hasSound ? `, 0 0 20px ${hexToRgba(keyColor, 0.4)}` : ''}`, 'important');
+            }
+            playSound(keyId);
+          }
+        }, { passive: false });
+
+        keyEl.addEventListener('touchend', (e) => {
+          // Only prevent default if not on a button
+          const isButton = e.target.closest('.key-btn');
+          if (!isButton) {
+            e.preventDefault();
+          }
+          keyEl.classList.remove('playing');
+          // Restore original shadow
+          if (data.color && data.color !== '#ffffff') {
+            keyEl.style.setProperty('box-shadow', originalShadow, 'important');
+          }
+        }, { passive: false });
+
+        keyEl.addEventListener('touchcancel', () => {
+          keyEl.classList.remove('playing');
+          // Restore original shadow
+          if (data.color && data.color !== '#ffffff') {
+            keyEl.style.setProperty('box-shadow', originalShadow, 'important');
+          }
+        });
+
+        keyboard.appendChild(keyEl);
+      }
+    }
+
+    // Play sound
+    async function playSound(keyId) {
+      const data = keyData[keyId];
+      if (!data || !data.audioData) return;
+
+      ensureAudioContext();
+
+      try {
+        // Limit simultaneous sounds to prevent audio breaking
+        if (activeSources.length >= MAX_SIMULTANEOUS_SOUNDS) {
+          // Stop and remove the oldest sound
+          const oldestSource = activeSources.shift();
+          try {
+            oldestSource.stop();
+          } catch (e) {
+            // Source may have already stopped
+          }
+        }
+
+        // Decode audio data
+        const audioData = base64ToArrayBuffer(data.audioData);
+        let audioBuffer = await audioContext.decodeAudioData(audioData.slice(0));
+
+        // Get effect values
+        const globalPitch = parseFloat(document.getElementById('globalPitch').value);
+        const globalSpeed = parseFloat(document.getElementById('globalSpeed').value);
+        const globalReverb = parseFloat(document.getElementById('globalReverb').value);
+        const globalDistortion = parseFloat(document.getElementById('globalDistortion').value);
+        const globalEcho = parseFloat(document.getElementById('globalEcho').value);
+        const globalTremolo = parseFloat(document.getElementById('globalTremolo').value);
+        const globalLowpass = parseFloat(document.getElementById('globalLowpass').value);
+        const globalBitcrusher = parseFloat(document.getElementById('globalBitcrusher').value);
+        const globalReverse = document.getElementById('globalReverse').checked;
+
+        const keyPitch = data.pitch || 1;
+        const keySpeed = data.speed || 1;
+        const keyReverb = data.reverb || 0;
+        const keyDistortion = data.distortion || 0;
+        const keyEcho = data.echo || 0;
+        const keyTremolo = data.tremolo || 0;
+        const keyLowpass = data.lowpass || 0;
+        const keyBitcrusher = data.bitcrusher || 0;
+        const keyReverse = data.reverse || false;
+
+        // Combined effects (multiply or add depending on effect type)
+        const finalPitch = globalPitch * keyPitch;
+        const finalSpeed = globalSpeed * keySpeed;
+        const finalReverb = Math.min(1, globalReverb + keyReverb);
+        const finalDistortion = Math.min(100, globalDistortion + keyDistortion);
+        const finalEcho = Math.min(1, globalEcho + keyEcho);
+        const finalTremolo = Math.min(1, globalTremolo + keyTremolo);
+        const finalLowpass = Math.min(1, globalLowpass + keyLowpass);
+        const finalBitcrusher = Math.min(1, globalBitcrusher + keyBitcrusher);
+        const finalReverse = globalReverse || keyReverse;
+
+        // Apply reverse effect by reversing the audio buffer
+        if (finalReverse) {
+          audioBuffer = reverseAudioBuffer(audioBuffer);
+        }
+
+        // Apply bit crusher effect by modifying the audio buffer
+        if (finalBitcrusher > 0) {
+          audioBuffer = applyBitcrusher(audioBuffer, finalBitcrusher);
+        }
+
+        // Create source
+        const source = audioContext.createBufferSource();
+        source.buffer = audioBuffer;
+
+        // Track this source
+        activeSources.push(source);
+
+        // Apply pitch (playback rate)
+        source.playbackRate.value = finalPitch * finalSpeed;
+
+        // Create effect nodes
+        let currentNode = source;
+
+        // Distortion
+        if (finalDistortion > 0) {
+          const distortion = audioContext.createWaveShaper();
+          distortion.curve = makeDistortionCurve(finalDistortion);
+          distortion.oversample = '4x';
+          currentNode.connect(distortion);
+          currentNode = distortion;
+        }
+
+        // Tremolo (amplitude modulation)
+        if (finalTremolo > 0) {
+          const tremolo = audioContext.createGain();
+          const lfo = audioContext.createOscillator();
+          const lfoGain = audioContext.createGain();
+
+          lfo.frequency.value = 5 + finalTremolo * 10; // 5-15 Hz modulation
+          lfoGain.gain.value = finalTremolo * 0.5; // Modulation depth
+
+          lfo.connect(lfoGain);
+          lfoGain.connect(tremolo.gain);
+
+          currentNode.connect(tremolo);
+          currentNode = tremolo;
+          lfo.start();
+        }
+
+        // Low-pass filter
+        if (finalLowpass > 0) {
+          const filter = audioContext.createBiquadFilter();
+          filter.type = 'lowpass';
+          // Map 0-1 to 20000Hz-300Hz (lower values = more filtering)
+          filter.frequency.value = 20000 * Math.pow(1 - finalLowpass, 3);
+          filter.Q.value = 1;
+          currentNode.connect(filter);
+          currentNode = filter;
+        }
+
+        // Echo/Delay
+        if (finalEcho > 0) {
+          const delay = audioContext.createDelay();
+          const delayGain = audioContext.createGain();
+          const feedback = audioContext.createGain();
+
+          delay.delayTime.value = 0.3; // 300ms delay
+          delayGain.gain.value = finalEcho * 0.7; // Wet signal
+          feedback.gain.value = finalEcho * 0.4; // Feedback amount
+
+          // Create feedback loop
+          delay.connect(feedback);
+          feedback.connect(delay);
+
+          // Mix dry and wet
+          currentNode.connect(delay);
+          delay.connect(delayGain);
+
+          const echoMerger = audioContext.createGain();
+          currentNode.connect(echoMerger); // Dry
+          delayGain.connect(echoMerger); // Wet
+          currentNode = echoMerger;
+        }
+
+        // Reverb
+        if (finalReverb > 0) {
+          const convolver = audioContext.createConvolver();
+          convolver.buffer = createReverbImpulse(audioContext, finalReverb);
+
+          const dry = audioContext.createGain();
+          const wet = audioContext.createGain();
+          dry.gain.value = 1 - finalReverb;
+          wet.gain.value = finalReverb;
+
+          currentNode.connect(dry);
+          currentNode.connect(convolver);
+          convolver.connect(wet);
+
+          const merger = audioContext.createGain();
+          dry.connect(merger);
+          wet.connect(merger);
+          currentNode = merger;
+        }
+
+        // Gain node with fade-in to prevent clicks
+        const gainNode = audioContext.createGain();
+        gainNode.gain.value = 0; // Start at 0
+        currentNode.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        // Very short fade-in to prevent clicking (3ms)
+        const now = audioContext.currentTime;
+        gainNode.gain.setValueAtTime(0, now);
+        gainNode.gain.linearRampToValueAtTime(1, now + 0.003);
+
+        // Play
+        source.start(0);
+
+        // Cleanup when done
+        source.onended = () => {
+          // Remove from active sources
+          const index = activeSources.indexOf(source);
+          if (index > -1) {
+            activeSources.splice(index, 1);
+          }
+        };
+
+        // Fallback timeout for cleanup
+        setTimeout(() => {
+          // Cleanup if still in active sources
+          const index = activeSources.indexOf(source);
+          if (index > -1) {
+            activeSources.splice(index, 1);
+          }
+        }, audioBuffer.duration * 1000 / (finalPitch * finalSpeed) + 100);
+
+      } catch (error) {
+        console.error('Error playing sound:', error);
+        // Cleanup activeSources in case of error
+        if (activeSources.length > 0) {
+          const lastSource = activeSources[activeSources.length - 1];
+          const index = activeSources.indexOf(lastSource);
+          if (index > -1) {
+            activeSources.splice(index, 1);
+          }
+        }
+      }
+    }
+
+    // Open record modal
+    function openRecordModal(keyId) {
+      currentRecordingKey = keyId;
+      document.getElementById('recordModal').classList.add('active');
+      document.getElementById('recordStatus').textContent = 'Press Start to begin recording. Press Stop when done.';
+      document.getElementById('recordStartBtn').style.display = 'block';
+      document.getElementById('recordStopBtn').style.display = 'none';
+      document.getElementById('recordingIndicator').style.display = 'none';
+    }
+
+    // Close record modal
+    function closeRecordModal() {
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+      }
+      document.getElementById('recordModal').classList.remove('active');
+      currentRecordingKey = null;
+
+      const keyEl = document.querySelector('.key.recording');
+      if (keyEl) keyEl.classList.remove('recording');
+    }
+
+    // Start recording
+    async function startRecording() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+        document.getElementById('recordStartBtn').style.display = 'none';
+        document.getElementById('recordStopBtn').style.display = 'none';
+        document.getElementById('recordingIndicator').style.display = 'flex';
+
+        // Countdown before starting actual recording
+        const statusEl = document.getElementById('recordStatus');
+        for (let i = 3; i > 0; i--) {
+          statusEl.innerHTML = `<div class="countdown-display">${i}</div>`;
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+
+        // Now start actual recording
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+          audioChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = async () => {
+          const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          const arrayBuffer = await audioBlob.arrayBuffer();
+
+          try {
+            // Decode audio
+            const decodedBuffer = await audioContext.decodeAudioData(arrayBuffer.slice(0));
+
+            // Optionally trim silence based on toggle
+            const processedBuffer = trimSilenceEnabled ? await trimSilence(decodedBuffer) : decodedBuffer;
+
+            // Re-encode
+            const processedArrayBuffer = await audioBufferToArrayBuffer(processedBuffer);
+            const base64 = arrayBufferToBase64(processedArrayBuffer);
+
+            const existingData = keyData[currentRecordingKey] || {};
+            await saveKeyData(currentRecordingKey, {
+              ...existingData,
+              audioData: base64
+            });
+          } catch (error) {
+            console.error('Error processing audio:', error);
+            // Fallback to original audio
+            const base64 = arrayBufferToBase64(arrayBuffer);
+            const existingData = keyData[currentRecordingKey] || {};
+            await saveKeyData(currentRecordingKey, {
+              ...existingData,
+              audioData: base64
+            });
+          }
+
+          // Stop all tracks
+          stream.getTracks().forEach(track => track.stop());
+
+          renderKeyboard();
+          closeRecordModal();
+        };
+
+        mediaRecorder.start();
+
+        document.getElementById('recordStopBtn').style.display = 'block';
+        document.getElementById('recordStatus').textContent = 'Nagrywanie...';
+
+        const keyEl = document.getElementById(currentRecordingKey);
+        if (keyEl) keyEl.classList.add('recording');
+
+      } catch (error) {
+        console.error('Error starting recording:', error);
+        alert('Nie można uzyskać dostępu do mikrofonu. Proszę zezwolić na dostęp do mikrofonu.');
+      }
+    }
+
+    // Stop recording
+    function stopRecording() {
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+      }
+    }
+
+    // Trim silence from audio buffer
+    async function trimSilence(audioBuffer, threshold = 0.003) {
+      const channels = audioBuffer.numberOfChannels;
+      const sampleRate = audioBuffer.sampleRate;
+      const length = audioBuffer.length;
+
+      // Calculate RMS (Root Mean Square) for better silence detection
+      function calculateRMS(buffer, startSample, windowSize) {
+        let sumSquares = 0;
+        let count = 0;
+        for (let i = startSample; i < Math.min(startSample + windowSize, buffer.length); i++) {
+          for (let ch = 0; ch < channels; ch++) {
+            const sample = buffer.getChannelData(ch)[i];
+            sumSquares += sample * sample;
+            count++;
+          }
+        }
+        return Math.sqrt(sumSquares / count);
+      }
+
+      // Find first non-silent sample using RMS with larger window
+      let start = 0;
+      const windowSize = Math.floor(sampleRate * 0.03); // 30ms window (increased from 20ms)
+      const stepSize = Math.floor(windowSize / 2); // 50% overlap
+
+      for (let i = 0; i < length - windowSize; i += stepSize) {
+        const rms = calculateRMS(audioBuffer, i, windowSize);
+        if (rms > threshold) {
+          start = Math.max(0, i - Math.floor(sampleRate * 0.05)); // Keep 50ms padding (increased from 10ms)
+          break;
+        }
+      }
+
+      // Find last non-silent sample
+      let end = length;
+      for (let i = length - windowSize; i >= start; i -= stepSize) {
+        const rms = calculateRMS(audioBuffer, i, windowSize);
+        if (rms > threshold) {
+          end = Math.min(length, i + windowSize + Math.floor(sampleRate * 0.1)); // Keep 100ms padding at end (increased from 10ms)
+          break;
+        }
+      }
+
+      // Ensure we have valid range
+      if (end <= start) {
+        console.warn('Invalid trim range, returning original audio');
+        return audioBuffer;
+      }
+
+      // Create new trimmed buffer
+      const trimmedLength = end - start;
+      const trimmedBuffer = audioContext.createBuffer(channels, trimmedLength, sampleRate);
+
+      for (let ch = 0; ch < channels; ch++) {
+        const sourceData = audioBuffer.getChannelData(ch);
+        const trimmedData = trimmedBuffer.getChannelData(ch);
+        for (let i = 0; i < trimmedLength; i++) {
+          trimmedData[i] = sourceData[start + i];
+        }
+      }
+
+      const originalDuration = (length / sampleRate).toFixed(2);
+      const trimmedDuration = (trimmedLength / sampleRate).toFixed(2);
+      console.log(`Audio trimmed: ${originalDuration}s → ${trimmedDuration}s (removed ${(originalDuration - trimmedDuration).toFixed(2)}s)`);
+      return trimmedBuffer;
+    }
+
+    // Convert AudioBuffer to ArrayBuffer
+    async function audioBufferToArrayBuffer(audioBuffer) {
+      const offlineContext = new OfflineAudioContext(
+        audioBuffer.numberOfChannels,
+        audioBuffer.length,
+        audioBuffer.sampleRate
+      );
+
+      const source = offlineContext.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(offlineContext.destination);
+      source.start();
+
+      const renderedBuffer = await offlineContext.startRendering();
+
+      // Convert to WAV format
+      return audioBufferToWav(renderedBuffer);
+    }
+
+    // Convert AudioBuffer to WAV ArrayBuffer
+    function audioBufferToWav(audioBuffer) {
+      const numChannels = audioBuffer.numberOfChannels;
+      const sampleRate = audioBuffer.sampleRate;
+      const format = 1; // PCM
+      const bitDepth = 16;
+
+      const bytesPerSample = bitDepth / 8;
+      const blockAlign = numChannels * bytesPerSample;
+
+      const data = [];
+      for (let i = 0; i < audioBuffer.length; i++) {
+        for (let ch = 0; ch < numChannels; ch++) {
+          const sample = audioBuffer.getChannelData(ch)[i];
+          const intSample = Math.max(-1, Math.min(1, sample));
+          data.push(intSample < 0 ? intSample * 0x8000 : intSample * 0x7FFF);
+        }
+      }
+
+      const dataLength = data.length * bytesPerSample;
+      const buffer = new ArrayBuffer(44 + dataLength);
+      const view = new DataView(buffer);
+
+      // WAV header
+      writeString(view, 0, 'RIFF');
+      view.setUint32(4, 36 + dataLength, true);
+      writeString(view, 8, 'WAVE');
+      writeString(view, 12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, format, true);
+      view.setUint16(22, numChannels, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * blockAlign, true);
+      view.setUint16(32, blockAlign, true);
+      view.setUint16(34, bitDepth, true);
+      writeString(view, 36, 'data');
+      view.setUint32(40, dataLength, true);
+
+      // Write audio data
+      let offset = 44;
+      for (let i = 0; i < data.length; i++) {
+        view.setInt16(offset, data[i], true);
+        offset += 2;
+      }
+
+      return buffer;
+    }
+
+    function writeString(view, offset, string) {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    }
+
+    // Open edit modal
+    function openEditModal(keyId) {
+      currentEditingKey = keyId;
+      const data = keyData[keyId] || {};
+
+      document.getElementById('editKeyName').value = data.name || `Klawisz ${parseInt(keyId.split('-')[1]) + 1}`;
+      document.getElementById('editKeyColor').value = data.color || '#ffffff';
+      document.getElementById('editKeyPitch').value = data.pitch || 1;
+      document.getElementById('editKeySpeed').value = data.speed || 1;
+      document.getElementById('editKeyReverb').value = data.reverb || 0;
+      document.getElementById('editKeyDistortion').value = data.distortion || 0;
+      document.getElementById('editKeyEcho').value = data.echo || 0;
+      document.getElementById('editKeyTremolo').value = data.tremolo || 0;
+      document.getElementById('editKeyLowpass').value = data.lowpass || 0;
+      document.getElementById('editKeyBitcrusher').value = data.bitcrusher || 0;
+      document.getElementById('editKeyReverse').checked = data.reverse || false;
+      document.getElementById('editPitchValue').textContent = (data.pitch || 1) + 'x';
+      document.getElementById('editSpeedValue').textContent = (data.speed || 1) + 'x';
+      document.getElementById('editReverbValue').textContent = Math.round((data.reverb || 0) * 100) + '%';
+      document.getElementById('editDistortionValue').textContent = (data.distortion || 0);
+      document.getElementById('editEchoValue').textContent = Math.round((data.echo || 0) * 100) + '%';
+      document.getElementById('editTremoloValue').textContent = Math.round((data.tremolo || 0) * 100) + '%';
+      document.getElementById('editLowpassValue').textContent = Math.round((data.lowpass || 0) * 100) + '%';
+      document.getElementById('editBitcrusherValue').textContent = Math.round((data.bitcrusher || 0) * 100) + '%';
+
+      document.getElementById('editModal').classList.add('active');
+    }
+
+    // Close edit modal
+    function closeEditModal() {
+      document.getElementById('editModal').classList.remove('active');
+      currentEditingKey = null;
+    }
+
+    // Save key edit
+    async function saveKeyEdit() {
+      const name = document.getElementById('editKeyName').value.trim() || `Klawisz ${parseInt(currentEditingKey.split('-')[1]) + 1}`;
+      const color = document.getElementById('editKeyColor').value;
+      const pitch = parseFloat(document.getElementById('editKeyPitch').value);
+      const speed = parseFloat(document.getElementById('editKeySpeed').value);
+      const reverb = parseFloat(document.getElementById('editKeyReverb').value);
+      const distortion = parseFloat(document.getElementById('editKeyDistortion').value);
+      const echo = parseFloat(document.getElementById('editKeyEcho').value);
+      const tremolo = parseFloat(document.getElementById('editKeyTremolo').value);
+      const lowpass = parseFloat(document.getElementById('editKeyLowpass').value);
+      const bitcrusher = parseFloat(document.getElementById('editKeyBitcrusher').value);
+      const reverse = document.getElementById('editKeyReverse').checked;
+
+      const existingData = keyData[currentEditingKey] || {};
+      await saveKeyData(currentEditingKey, {
+        ...existingData,
+        name,
+        color,
+        pitch,
+        speed,
+        reverb,
+        distortion,
+        echo,
+        tremolo,
+        lowpass,
+        bitcrusher,
+        reverse
+      });
+
+      renderKeyboard();
+      closeEditModal();
+    }
+
+    // Reset key effects to defaults
+    function resetKeyEffects() {
+      document.getElementById('editKeyPitch').value = 1;
+      document.getElementById('editKeySpeed').value = 1;
+      document.getElementById('editKeyReverb').value = 0;
+      document.getElementById('editKeyDistortion').value = 0;
+      document.getElementById('editKeyEcho').value = 0;
+      document.getElementById('editKeyTremolo').value = 0;
+      document.getElementById('editKeyLowpass').value = 0;
+      document.getElementById('editKeyBitcrusher').value = 0;
+      document.getElementById('editKeyReverse').checked = false;
+      document.getElementById('editPitchValue').textContent = '1x';
+      document.getElementById('editSpeedValue').textContent = '1x';
+      document.getElementById('editReverbValue').textContent = '0%';
+      document.getElementById('editDistortionValue').textContent = '0';
+      document.getElementById('editEchoValue').textContent = '0%';
+      document.getElementById('editTremoloValue').textContent = '0%';
+      document.getElementById('editLowpassValue').textContent = '0%';
+      document.getElementById('editBitcrusherValue').textContent = '0%';
+    }
+
+    // Delete sound
+    async function deleteSound(keyId) {
+      if (confirm('Usunąć ten dźwięk?')) {
+        const existingData = keyData[keyId] || {};
+        delete existingData.audioData;
+
+        if (Object.keys(existingData).length > 1) {
+          await saveKeyData(keyId, existingData);
+        } else {
+          await deleteKeyData(keyId);
+        }
+
+        renderKeyboard();
+      }
+    }
+
+    // Update key count
+    async function updateKeyCount() {
+      const newCount = parseInt(document.getElementById('keyCount').value);
+      if (newCount >= 1 && newCount <= 50) {
+        keyCount = newCount;
+        await saveConfig();
+        renderKeyboard();
+      }
+    }
+
+    // Clear all sounds
+    async function clearAllSounds() {
+      if (confirm('Czy na pewno chcesz usunąć WSZYSTKIE dźwięki? Tej operacji nie można cofnąć.')) {
+        const transaction = db.transaction([STORE_NAME], 'readwrite');
+        const store = transaction.objectStore(STORE_NAME);
+        store.clear();
+
+        transaction.oncomplete = () => {
+          keyData = {};
+          renderKeyboard();
+        };
+      }
+    }
+
+    // Export data
+    async function exportData() {
+      const exportObj = {
+        keyCount,
+        keys: keyData
+      };
+
+      const blob = new Blob([JSON.stringify(exportObj)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `sound-keyboard-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+
+      URL.revokeObjectURL(url);
+    }
+
+    // Import data
+    async function importData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+
+        if (data.keyCount) {
+          keyCount = data.keyCount;
+          document.getElementById('keyCount').value = keyCount;
+          await saveConfig();
+        }
+
+        if (data.keys) {
+          for (const [keyId, keyInfo] of Object.entries(data.keys)) {
+            await saveKeyData(keyId, keyInfo);
+          }
+        }
+
+        await loadKeyData();
+        renderKeyboard();
+        alert('Import zakończony pomyślnie!');
+
+      } catch (error) {
+        console.error('Import error:', error);
+        alert('Nie udało się zaimportować pliku. Sprawdź format pliku.');
+      }
+
+      event.target.value = '';
+    }
+
+    // Update effect display
+    function updateEffectDisplay(type) {
+      if (type === 'pitch') {
+        const value = document.getElementById('globalPitch').value;
+        document.getElementById('pitchValue').textContent = value + 'x';
+      } else if (type === 'speed') {
+        const value = document.getElementById('globalSpeed').value;
+        document.getElementById('speedValue').textContent = value + 'x';
+      } else if (type === 'reverb') {
+        const value = document.getElementById('globalReverb').value;
+        document.getElementById('reverbValue').textContent = Math.round(value * 100) + '%';
+      } else if (type === 'distortion') {
+        const value = document.getElementById('globalDistortion').value;
+        document.getElementById('distortionValue').textContent = value;
+      } else if (type === 'echo') {
+        const value = document.getElementById('globalEcho').value;
+        document.getElementById('echoValue').textContent = Math.round(value * 100) + '%';
+      } else if (type === 'tremolo') {
+        const value = document.getElementById('globalTremolo').value;
+        document.getElementById('tremoloValue').textContent = Math.round(value * 100) + '%';
+      } else if (type === 'lowpass') {
+        const value = document.getElementById('globalLowpass').value;
+        document.getElementById('lowpassValue').textContent = Math.round(value * 100) + '%';
+      } else if (type === 'bitcrusher') {
+        const value = document.getElementById('globalBitcrusher').value;
+        document.getElementById('bitcrusherValue').textContent = Math.round(value * 100) + '%';
+      } else if (type === 'reverse') {
+        const checked = document.getElementById('globalReverse').checked;
+        document.getElementById('reverseValue').textContent = checked ? 'ON' : 'OFF';
+      }
+    }
+
+    // Reset global effects to defaults
+    function resetGlobalEffects() {
+      document.getElementById('globalPitch').value = 1;
+      document.getElementById('globalSpeed').value = 1;
+      document.getElementById('globalReverb').value = 0;
+      document.getElementById('globalDistortion').value = 0;
+      document.getElementById('globalEcho').value = 0;
+      document.getElementById('globalTremolo').value = 0;
+      document.getElementById('globalLowpass').value = 0;
+      document.getElementById('globalBitcrusher').value = 0;
+      document.getElementById('globalReverse').checked = false;
+      updateEffectDisplay('pitch');
+      updateEffectDisplay('speed');
+      updateEffectDisplay('reverb');
+      updateEffectDisplay('distortion');
+      updateEffectDisplay('echo');
+      updateEffectDisplay('tremolo');
+      updateEffectDisplay('lowpass');
+      updateEffectDisplay('bitcrusher');
+      updateEffectDisplay('reverse');
+    }
+
+    // Toggle between Edit and Play mode
+    function toggleMode() {
+      isPlayMode = !isPlayMode;
+      const body = document.body;
+      const toggle = document.getElementById('modeToggle');
+      const label = document.getElementById('modeLabel');
+
+      if (isPlayMode) {
+        body.classList.add('play-mode');
+        toggle.classList.add('active');
+        label.textContent = 'Gra';
+      } else {
+        body.classList.remove('play-mode');
+        toggle.classList.remove('active');
+        label.textContent = 'Edycja';
+      }
+    }
+
+    // Toggle fullscreen mode
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        // Enter fullscreen
+        document.documentElement.requestFullscreen().then(() => {
+          updateFullscreenButton(true);
+        }).catch(err => {
+          console.error('Error attempting to enable fullscreen:', err);
+        });
+      } else {
+        // Exit fullscreen
+        document.exitFullscreen().then(() => {
+          updateFullscreenButton(false);
+        }).catch(err => {
+          console.error('Error attempting to exit fullscreen:', err);
+        });
+      }
+    }
+
+    // Update fullscreen button icon and label
+    function updateFullscreenButton(isFullscreen) {
+      const icon = document.getElementById('fullscreenIcon');
+      const label = document.getElementById('fullscreenLabel');
+
+      if (isFullscreen) {
+        // Exit fullscreen icon (minimize)
+        icon.innerHTML = '<path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>';
+        label.textContent = 'Wyjdź';
+      } else {
+        // Enter fullscreen icon (maximize)
+        icon.innerHTML = '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>';
+        label.textContent = 'Pełny ekran';
+      }
+    }
+
+    // Listen for fullscreen changes (e.g., user pressing ESC)
+    document.addEventListener('fullscreenchange', () => {
+      updateFullscreenButton(!!document.fullscreenElement);
+    });
+
+    // Toggle silence trimming
+    function toggleTrimSilence() {
+      trimSilenceEnabled = !trimSilenceEnabled;
+      const btn = document.getElementById('trimToggleBtn');
+      const label = document.getElementById('trimToggleLabel');
+
+      if (trimSilenceEnabled) {
+        btn.classList.remove('btn-danger');
+        btn.classList.add('btn-primary');
+        label.textContent = 'Przycinanie ciszy: ON';
+      } else {
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-danger');
+        label.textContent = 'Przycinanie ciszy: OFF';
+      }
+    }
+
+    // Utility: Convert ArrayBuffer to Base64
+    function arrayBufferToBase64(buffer) {
+      let binary = '';
+      const bytes = new Uint8Array(buffer);
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      return btoa(binary);
+    }
+
+    // Utility: Convert Base64 to ArrayBuffer
+    function base64ToArrayBuffer(base64) {
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return bytes.buffer;
+    }
+
+    // Utility: Convert hex to HSL
+    function hexToHsl(hex) {
+      const r = parseInt(hex.substr(0, 2), 16) / 255;
+      const g = parseInt(hex.substr(2, 2), 16) / 255;
+      const b = parseInt(hex.substr(4, 2), 16) / 255;
+
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      let h, s, l = (max + min) / 2;
+
+      if (max === min) {
+        h = s = 0;
+      } else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+          case g: h = ((b - r) / d + 2) / 6; break;
+          case b: h = ((r - g) / d + 4) / 6; break;
+        }
+      }
+      return { h, s, l };
+    }
+
+    // Utility: Convert HSL to RGB
+    function hslToRgb(h, s, l) {
+      let r, g, b;
+      if (s === 0) {
+        r = g = b = l;
+      } else {
+        const hue2rgb = (p, q, t) => {
+          if (t < 0) t += 1;
+          if (t > 1) t -= 1;
+          if (t < 1/6) return p + (q - p) * 6 * t;
+          if (t < 1/2) return q;
+          if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+          return p;
+        };
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+      }
+      return {
+        r: Math.round(r * 255),
+        g: Math.round(g * 255),
+        b: Math.round(b * 255)
+      };
+    }
+
+    // Utility: Adjust color brightness (preserves hue using HSL)
+    function adjustColor(color, amount) {
+      const hex = color.replace('#', '');
+      const hsl = hexToHsl(hex);
+
+      // For darkening (negative amount), reduce lightness by percentage
+      // For lightening (positive amount), increase lightness
+      let newL;
+      if (amount < 0) {
+        // Darken: reduce lightness proportionally
+        const darkenPercent = Math.abs(amount) / 255; // Convert to 0-1 range
+        newL = Math.max(0, hsl.l * (1 - darkenPercent * 2));
+      } else {
+        // Lighten: increase lightness
+        const lightenPercent = amount / 255;
+        newL = Math.min(1, hsl.l + (1 - hsl.l) * lightenPercent * 2);
+      }
+
+      const rgb = hslToRgb(hsl.h, hsl.s, newL);
+      return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+    }
+
+    // Utility: Get contrasting color (inverted)
+    function getContrastColor(hexColor) {
+      const hex = hexColor.replace('#', '');
+      const r = parseInt(hex.substr(0, 2), 16);
+      const g = parseInt(hex.substr(2, 2), 16);
+      const b = parseInt(hex.substr(4, 2), 16);
+
+      // Calculate inverted color
+      const invR = 255 - r;
+      const invG = 255 - g;
+      const invB = 255 - b;
+
+      return `rgb(${invR}, ${invG}, ${invB})`;
+    }
+
+    // Utility: Convert hex color to rgba with alpha
+    function hexToRgba(hexColor, alpha) {
+      const hex = hexColor.replace('#', '');
+      const r = parseInt(hex.substr(0, 2), 16);
+      const g = parseInt(hex.substr(2, 2), 16);
+      const b = parseInt(hex.substr(4, 2), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    // Create distortion curve
+    function makeDistortionCurve(amount) {
+      const k = amount;
+      const nSamples = 44100;
+      const curve = new Float32Array(nSamples);
+      const deg = Math.PI / 180;
+
+      for (let i = 0; i < nSamples; i++) {
+        const x = (i * 2) / nSamples - 1;
+        curve[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
+      }
+      return curve;
+    }
+
+    // Create reverb impulse response
+    function createReverbImpulse(context, reverbAmount) {
+      const sampleRate = context.sampleRate;
+      const length = sampleRate * (1 + reverbAmount * 2); // 1-3 seconds
+      const impulse = context.createBuffer(2, length, sampleRate);
+      const impulseL = impulse.getChannelData(0);
+      const impulseR = impulse.getChannelData(1);
+
+      for (let i = 0; i < length; i++) {
+        const decay = Math.pow(1 - i / length, 2 + reverbAmount * 3);
+        impulseL[i] = (Math.random() * 2 - 1) * decay;
+        impulseR[i] = (Math.random() * 2 - 1) * decay;
+      }
+
+      return impulse;
+    }
+
+    // Reverse audio buffer
+    function reverseAudioBuffer(audioBuffer) {
+      const numberOfChannels = audioBuffer.numberOfChannels;
+      const length = audioBuffer.length;
+      const sampleRate = audioBuffer.sampleRate;
+
+      const reversedBuffer = audioContext.createBuffer(numberOfChannels, length, sampleRate);
+
+      for (let channel = 0; channel < numberOfChannels; channel++) {
+        const originalData = audioBuffer.getChannelData(channel);
+        const reversedData = reversedBuffer.getChannelData(channel);
+
+        for (let i = 0; i < length; i++) {
+          reversedData[i] = originalData[length - 1 - i];
+        }
+      }
+
+      return reversedBuffer;
+    }
+
+    // Apply bit crusher effect to audio buffer
+    function applyBitcrusher(audioBuffer, amount) {
+      const numberOfChannels = audioBuffer.numberOfChannels;
+      const length = audioBuffer.length;
+      const sampleRate = audioBuffer.sampleRate;
+
+      const crushedBuffer = audioContext.createBuffer(numberOfChannels, length, sampleRate);
+
+      // Calculate bit depth reduction (from 16-bit down to 2-bit)
+      const bits = Math.floor(16 - amount * 14); // 16 bits to 2 bits
+      const step = Math.pow(2, bits - 1);
+
+      // Calculate sample rate reduction factor
+      const sampleRateReduction = Math.floor(1 + amount * 10); // 1x to 11x
+
+      for (let channel = 0; channel < numberOfChannels; channel++) {
+        const originalData = audioBuffer.getChannelData(channel);
+        const crushedData = crushedBuffer.getChannelData(channel);
+
+        let lastSample = 0;
+        for (let i = 0; i < length; i++) {
+          // Sample rate reduction
+          if (i % sampleRateReduction === 0) {
+            // Bit depth reduction
+            const sample = originalData[i];
+            lastSample = Math.round(sample * step) / step;
+          }
+          crushedData[i] = lastSample;
+        }
+      }
+
+      return crushedBuffer;
+    }
+
+    // Utility: Escape HTML
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Close modals on overlay click
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          overlay.classList.remove('active');
+          if (overlay.id === 'recordModal') {
+            closeRecordModal();
+          }
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>
