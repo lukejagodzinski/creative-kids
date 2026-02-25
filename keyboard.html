@@ -992,10 +992,13 @@
       audioContext = new (window.AudioContext || window.webkitAudioContext)();
     }
 
-    // Ensure audio context is resumed (browser autoplay policy)
-    function ensureAudioContext() {
+    // Ensure audio context is ready (browser autoplay policy + recovery)
+    async function ensureAudioContext() {
+      if (!audioContext || audioContext.state === 'closed') {
+        initAudioContext();
+      }
       if (audioContext.state === 'suspended') {
-        audioContext.resume();
+        await audioContext.resume();
       }
     }
 
@@ -1257,7 +1260,7 @@
       const data = keyData[keyId];
       if (!data || !data.audioData) return;
 
-      ensureAudioContext();
+      await ensureAudioContext();
 
       try {
         // Limit simultaneous sounds to prevent audio breaking
@@ -1340,20 +1343,20 @@
         }
 
         // Tremolo (amplitude modulation)
+        const tremoloLfo = finalTremolo > 0 ? audioContext.createOscillator() : null;
         if (finalTremolo > 0) {
           const tremolo = audioContext.createGain();
-          const lfo = audioContext.createOscillator();
           const lfoGain = audioContext.createGain();
 
-          lfo.frequency.value = 5 + finalTremolo * 10; // 5-15 Hz modulation
+          tremoloLfo.frequency.value = 5 + finalTremolo * 10; // 5-15 Hz modulation
           lfoGain.gain.value = finalTremolo * 0.5; // Modulation depth
 
-          lfo.connect(lfoGain);
+          tremoloLfo.connect(lfoGain);
           lfoGain.connect(tremolo.gain);
 
           currentNode.connect(tremolo);
           currentNode = tremolo;
-          lfo.start();
+          tremoloLfo.start();
         }
 
         // Low-pass filter
@@ -1368,18 +1371,19 @@
         }
 
         // Echo/Delay
+        let echoFeedback = null;
         if (finalEcho > 0) {
           const delay = audioContext.createDelay();
           const delayGain = audioContext.createGain();
-          const feedback = audioContext.createGain();
+          echoFeedback = audioContext.createGain();
 
           delay.delayTime.value = 0.3; // 300ms delay
           delayGain.gain.value = finalEcho * 0.7; // Wet signal
-          feedback.gain.value = finalEcho * 0.4; // Feedback amount
+          echoFeedback.gain.value = finalEcho * 0.4; // Feedback amount
 
           // Create feedback loop
-          delay.connect(feedback);
-          feedback.connect(delay);
+          delay.connect(echoFeedback);
+          echoFeedback.connect(delay);
 
           // Mix dry and wet
           currentNode.connect(delay);
@@ -1427,21 +1431,20 @@
 
         // Cleanup when done
         source.onended = () => {
+          // Stop tremolo LFO if active
+          if (tremoloLfo) {
+            try { tremoloLfo.stop(); } catch (e) {}
+          }
+          // Break echo feedback loop
+          if (echoFeedback) {
+            echoFeedback.disconnect();
+          }
           // Remove from active sources
           const index = activeSources.indexOf(source);
           if (index > -1) {
             activeSources.splice(index, 1);
           }
         };
-
-        // Fallback timeout for cleanup
-        setTimeout(() => {
-          // Cleanup if still in active sources
-          const index = activeSources.indexOf(source);
-          if (index > -1) {
-            activeSources.splice(index, 1);
-          }
-        }, audioBuffer.duration * 1000 / (finalPitch * finalSpeed) + 100);
 
       } catch (error) {
         console.error('Error playing sound:', error);
