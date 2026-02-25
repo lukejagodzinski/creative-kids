@@ -426,6 +426,7 @@
     let keyData = {};
     let isRecordMode = false;
     let isCountingDown = false;
+    let isProcessing = false;
     let currentRecordingKey = null;
     let mediaRecorder = null;
     let recordedChunks = [];
@@ -538,7 +539,7 @@
 
     // ============ KEY TAP HANDLER ============
     function onKeyTap(keyId) {
-      if (isCountingDown) return;
+      if (isCountingDown || isProcessing) return;
 
       if (isRecordMode) {
         if (currentRecordingKey === keyId) {
@@ -556,10 +557,10 @@
     }
 
     // ============ RECORD MODE ============
-    function toggleRecordMode() {
-      if (isCountingDown) return;
+    async function toggleRecordMode() {
+      if (isCountingDown || isProcessing) return;
       if (currentRecordingKey !== null) {
-        stopRecording();
+        await stopRecording();
       }
       isRecordMode = !isRecordMode;
       document.body.classList.toggle('record-mode', isRecordMode);
@@ -684,6 +685,9 @@
     async function processAndSaveChunks(keyId) {
       if (recordedChunks.length === 0 || !keyId) return;
 
+      isProcessing = true;
+      setStatus('Przetwarzanie dzwieku...', 'recording');
+
       try {
         const blob = new Blob(recordedChunks, { type: recordedChunks[0].type });
         const arrayBuffer = await blob.arrayBuffer();
@@ -705,6 +709,13 @@
         const arrayBuffer = await blob.arrayBuffer();
         const base64 = arrayBufferToBase64(arrayBuffer);
         await saveSound(keyId, base64, blob.type);
+      } finally {
+        isProcessing = false;
+        if (isRecordMode) {
+          setStatus('Zapisano! Dotknij klawisz aby nagrac kolejny', 'recording');
+        } else {
+          setStatus('Zapisano! Kliknij klawisz aby odtworzyc', '');
+        }
       }
     }
 
