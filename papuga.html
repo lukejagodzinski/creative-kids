@@ -296,6 +296,23 @@
   </div>
 
   <script>
+    // ============ CONSTANTS ============
+    const SILENCE_THRESHOLD = 15;
+    const SILENCE_DELAY_MS = 1200;
+    const MIN_RECORDING_MS = 300;
+
+    const SVG_MIC = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+      <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+      <line x1="12" y1="19" x2="12" y2="23"/>
+      <line x1="8" y1="23" x2="16" y2="23"/>
+    </svg>`;
+
+    const SVG_STOP = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="6" y="6" width="12" height="12" rx="2"/>
+    </svg>`;
+
+    // ============ STATE ============
     let audioContext = null;
     let mediaStream = null;
     let analyser = null;
@@ -307,13 +324,10 @@
     let silenceTimer = null;
     let selectedFilter = 'chipmunk';
     let animFrameId = null;
-
-    const SILENCE_THRESHOLD = 15;
-    const SILENCE_DELAY_MS = 1200;
-    const MIN_RECORDING_MS = 300;
-
     let speakStartTime = 0;
+    let lastRecordedBlob = null;
 
+    // ============ DOM REFS ============
     const parrotArea = document.getElementById('parrotArea');
     const statusText = document.getElementById('statusText');
     const mainBtn = document.getElementById('mainBtn');
@@ -351,11 +365,7 @@
         recordedChunks = [];
 
         mainBtn.classList.add('active');
-        mainBtn.innerHTML = `
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="6" y="6" width="12" height="12" rx="2"/>
-          </svg>
-          STOP`;
+        mainBtn.innerHTML = SVG_STOP + 'STOP';
 
         setStatus('Slucham... mow cos!', 'active');
         playBtn.classList.add('show');
@@ -395,19 +405,13 @@
       }
 
       recordedChunks = [];
+      lastRecordedBlob = null;
       playBtn.classList.remove('show');
 
       parrotArea.classList.remove('listening', 'playing');
 
       mainBtn.classList.remove('active');
-      mainBtn.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-          <line x1="12" y1="19" x2="12" y2="23"/>
-          <line x1="8" y1="23" x2="16" y2="23"/>
-        </svg>
-        START`;
+      mainBtn.innerHTML = SVG_MIC + 'START';
 
       setStatus('', '');
     }
@@ -459,8 +463,8 @@
       };
       mediaRecorder.onstop = () => {
         if (recordedChunks.length > 0 && (Date.now() - speakStartTime) >= MIN_RECORDING_MS) {
-          const blob = new Blob(recordedChunks, { type: recordedChunks[0].type });
-          playWithFilter(blob);
+          lastRecordedBlob = new Blob(recordedChunks, { type: recordedChunks[0].type });
+          playWithFilter(lastRecordedBlob);
         }
       };
       mediaRecorder.start(100);
@@ -485,7 +489,12 @@
     }
 
     function playRecording() {
-      if (!isListening || isPlaying) return;
+      if (!isListening) return;
+
+      // If already playing, stop current playback first so user can replay
+      if (isPlaying) {
+        return;
+      }
 
       if (silenceTimer) {
         clearTimeout(silenceTimer);
@@ -496,12 +505,70 @@
         isSpeaking = false;
         parrotArea.classList.remove('listening');
         mediaRecorder.stop();
-      } else if (recordedChunks.length > 0) {
-        const blob = new Blob(recordedChunks, { type: recordedChunks[0].type });
-        playWithFilter(blob);
+      } else if (lastRecordedBlob) {
+        playWithFilter(lastRecordedBlob);
       }
     }
 
+    // ============ AUDIO EFFECTS ============
+    function applyRobotEffect(ctx, source) {
+      const oscillator = ctx.createOscillator();
+      oscillator.type = 'square';
+      oscillator.frequency.value = 50;
+      const gainMod = ctx.createGain();
+      gainMod.gain.value = 0;
+      oscillator.connect(gainMod.gain);
+      oscillator.start();
+
+      const waveshaper = ctx.createWaveShaper();
+      const curve = new Float32Array(256);
+      for (let i = 0; i < 256; i++) {
+        const x = (i / 128) - 1;
+        curve[i] = Math.sign(x) * Math.pow(Math.abs(x), 0.5);
+      }
+      waveshaper.curve = curve;
+
+      source.connect(waveshaper);
+      waveshaper.connect(gainMod);
+      source.addEventListener('ended', () => oscillator.stop());
+      return gainMod;
+    }
+
+    function applyEchoEffect(ctx, inputNode) {
+      const delay1 = ctx.createDelay(1.0);
+      delay1.delayTime.value = 0.25;
+      const feedback1 = ctx.createGain();
+      feedback1.gain.value = 0.5;
+
+      const delay2 = ctx.createDelay(1.0);
+      delay2.delayTime.value = 0.5;
+      const feedback2 = ctx.createGain();
+      feedback2.gain.value = 0.3;
+
+      const merger = ctx.createGain();
+      merger.gain.value = 1;
+
+      inputNode.connect(merger);
+      inputNode.connect(delay1);
+      delay1.connect(feedback1);
+      feedback1.connect(merger);
+      feedback1.connect(delay1);
+      inputNode.connect(delay2);
+      delay2.connect(feedback2);
+      feedback2.connect(merger);
+
+      return merger;
+    }
+
+    function finishPlayback() {
+      isPlaying = false;
+      parrotArea.classList.remove('playing');
+      if (isListening) {
+        setStatus('Slucham... mow cos!', 'active');
+      }
+    }
+
+    // ============ PLAYBACK ============
     async function playWithFilter(blob) {
       if (!isListening) return;
 
@@ -514,114 +581,37 @@
         const arrayBuffer = await blob.arrayBuffer();
         const audioBuffer = await playCtx.decodeAudioData(arrayBuffer);
 
-        let processedBuffer = audioBuffer;
-
-        if (selectedFilter === 'reverse') {
-          processedBuffer = reverseBuffer(playCtx, audioBuffer);
-        }
+        const processedBuffer = selectedFilter === 'reverse'
+          ? reverseBuffer(playCtx, audioBuffer)
+          : audioBuffer;
 
         const source = playCtx.createBufferSource();
         source.buffer = processedBuffer;
 
-        // Apply filter based on selection
         let lastNode = source;
 
         switch (selectedFilter) {
-          case 'chipmunk':
-            source.playbackRate.value = 1.8;
-            break;
-          case 'deep':
-            source.playbackRate.value = 0.55;
-            break;
-          case 'robot': {
-            // Ring modulation effect for robot voice
-            const oscillator = playCtx.createOscillator();
-            oscillator.type = 'square';
-            oscillator.frequency.value = 50;
-            const gainMod = playCtx.createGain();
-            gainMod.gain.value = 0;
-            oscillator.connect(gainMod.gain);
-            oscillator.start();
-
-            const waveshaper = playCtx.createWaveShaper();
-            const curve = new Float32Array(256);
-            for (let i = 0; i < 256; i++) {
-              const x = (i / 128) - 1;
-              curve[i] = Math.sign(x) * Math.pow(Math.abs(x), 0.5);
-            }
-            waveshaper.curve = curve;
-
-            source.connect(waveshaper);
-            waveshaper.connect(gainMod);
-            lastNode = gainMod;
-
-            source.onended = () => oscillator.stop();
-            break;
-          }
-          case 'echo': {
-            const delay1 = playCtx.createDelay(1.0);
-            delay1.delayTime.value = 0.25;
-            const feedback1 = playCtx.createGain();
-            feedback1.gain.value = 0.5;
-
-            const delay2 = playCtx.createDelay(1.0);
-            delay2.delayTime.value = 0.5;
-            const feedback2 = playCtx.createGain();
-            feedback2.gain.value = 0.3;
-
-            const merger = playCtx.createGain();
-            merger.gain.value = 1;
-
-            source.connect(merger);
-            source.connect(delay1);
-            delay1.connect(feedback1);
-            feedback1.connect(merger);
-            feedback1.connect(delay1);
-            source.connect(delay2);
-            delay2.connect(feedback2);
-            feedback2.connect(merger);
-
-            lastNode = merger;
-            break;
-          }
-          case 'reverse':
-            // Buffer already reversed above
-            break;
+          case 'chipmunk': source.playbackRate.value = 1.8; break;
+          case 'deep':     source.playbackRate.value = 0.55; break;
+          case 'robot':    lastNode = applyRobotEffect(playCtx, source); break;
+          case 'echo':     lastNode = applyEchoEffect(playCtx, source); break;
         }
 
         lastNode.connect(playCtx.destination);
-
         source.start(0);
 
-        // Calculate playback duration
-        let duration = processedBuffer.duration;
-        if (selectedFilter === 'chipmunk') duration /= 1.8;
-        else if (selectedFilter === 'deep') duration /= 0.55;
-        if (selectedFilter === 'echo') duration += 1.0;
-
         source.onended = () => {
-          // Give echo some time to fade
           const extraTime = selectedFilter === 'echo' ? 1200 : 100;
-          setTimeout(() => {
-            isPlaying = false;
-            parrotArea.classList.remove('playing');
-            if (isListening) {
-              setStatus('Slucham... mow cos!', 'active');
-            }
-            playCtx.close();
-          }, extraTime);
+          setTimeout(() => { finishPlayback(); playCtx.close(); }, extraTime);
         };
 
       } catch (err) {
         console.error('Playback error:', err);
-        isPlaying = false;
-        parrotArea.classList.remove('playing');
-        if (isListening) {
-          setStatus('Slucham... mow cos!', 'active');
-        }
+        finishPlayback();
       }
     }
 
+    // ============ AUDIO UTILITIES ============
     function reverseBuffer(ctx, buffer) {
       const reversed = ctx.createBuffer(
         buffer.numberOfChannels,
