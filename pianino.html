@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Pianino - Klawiatura Dzwiekowa</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      user-select: none;
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      height: 100dvh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px;
+    }
+
+    body:fullscreen {
+      padding: 8px;
+    }
+
+    body:-webkit-full-screen {
+      padding: 8px;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      height: 100%;
+      gap: 10px;
+    }
+
+    /* Status text */
+    .status-text {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-align: center;
+      min-height: 1.3em;
+      flex-shrink: 0;
+    }
+
+    .status-text.recording {
+      color: #ff6b6b;
+    }
+
+    .status-text.playing {
+      color: #1dd1a1;
+    }
+
+    /* Controls area: effects + round buttons */
+    .controls-area {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      flex-shrink: 0;
+      margin-bottom: 8px;
+    }
+
+    .effect-btn {
+      padding: 14px 20px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .effect-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .effect-btn:active {
+      transform: scale(0.95);
+    }
+
+    .effect-btn.active {
+      border-color: #48dbfb;
+      background: rgba(72, 219, 251, 0.2);
+      color: #48dbfb;
+    }
+
+    .btn-round {
+      margin-left: 8px;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      color: white;
+      font-size: 0.65rem;
+      font-weight: 700;
+    }
+
+    .btn-round:hover {
+      transform: scale(1.05);
+    }
+
+    .btn-round:active {
+      transform: scale(0.95);
+    }
+
+    .btn-round svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .btn-record {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-record.active {
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+      box-shadow: 0 6px 20px rgba(238, 90, 90, 0.4);
+    }
+
+    .btn-clear {
+      width: 56px;
+      height: 56px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      box-shadow: none;
+    }
+
+    .btn-clear svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .btn-fullscreen {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.7);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    .btn-fullscreen:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .btn-fullscreen:active {
+      transform: scale(0.95);
+    }
+
+    .btn-fullscreen svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Piano keys - single row at bottom */
+    .keys-row {
+      display: flex;
+      gap: 3px;
+      width: 100%;
+      flex: 1;
+      min-height: 0;
+      align-items: stretch;
+    }
+
+    .key {
+      flex: 1;
+      min-width: 0;
+      background: linear-gradient(180deg, #fefefe 0%, #e8e8e8 30%, #d4d4d4 100%);
+      border: none;
+      border-radius: 0 0 12px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding-bottom: 14px;
+      cursor: pointer;
+      transition: all 0.1s ease;
+      box-shadow:
+        0 10px 20px rgba(0, 0, 0, 0.3),
+        inset 0 -3px 0 #bbb,
+        inset 0 1px 0 #fff;
+      position: relative;
+      font-size: clamp(0.7rem, 2.5vw, 1.1rem);
+      font-weight: 700;
+      color: #999;
+    }
+
+    .key::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 8px;
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0.12) 0%, transparent 100%);
+    }
+
+    .key:active,
+    .key.key-playing {
+      transform: translateY(4px);
+      box-shadow:
+        0 5px 10px rgba(0, 0, 0, 0.3),
+        inset 0 -1px 0 #bbb,
+        inset 0 1px 0 #fff;
+    }
+
+    .key.has-sound {
+      background: linear-gradient(180deg, #e8fff0 0%, #c8f7d6 30%, #a8e6be 100%);
+      color: #555;
+      box-shadow:
+        0 10px 20px rgba(0, 0, 0, 0.3),
+        inset 0 -3px 0 #7dcea0,
+        inset 0 1px 0 #fff,
+        0 0 15px rgba(29, 209, 161, 0.2);
+    }
+
+    .key.has-sound:active,
+    .key.has-sound.key-playing {
+      box-shadow:
+        0 5px 10px rgba(0, 0, 0, 0.3),
+        inset 0 -1px 0 #7dcea0,
+        inset 0 1px 0 #fff;
+    }
+
+    .key.recording {
+      background: linear-gradient(180deg, #ffe8e8 0%, #ffc8c8 30%, #ffb0b0 100%);
+      animation: pulse-record 1.5s infinite;
+      color: #c44;
+    }
+
+    .key.recording::after {
+      content: '';
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 10px;
+      height: 10px;
+      background: #ff6b6b;
+      border-radius: 50%;
+      animation: blink 0.8s infinite;
+    }
+
+    body.record-mode .key:not(.recording)::after {
+      content: '🎤';
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.8rem;
+      opacity: 0.35;
+    }
+
+    @keyframes pulse-record {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.5), 0 10px 20px rgba(0, 0, 0, 0.3); }
+      50% { box-shadow: 0 0 0 12px rgba(255, 107, 107, 0), 0 10px 20px rgba(0, 0, 0, 0.3); }
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* Countdown overlay */
+    .countdown-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s;
+    }
+
+    .countdown-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .countdown-number {
+      font-size: 10rem;
+      font-weight: 900;
+      color: white;
+      text-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+      animation: countdownPop 0.9s ease-out;
+    }
+
+    @keyframes countdownPop {
+      0% { transform: scale(0.3); opacity: 0; }
+      40% { transform: scale(1.15); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Responsive: landscape */
+    @media (orientation: landscape) {
+      .container {
+        gap: 6px;
+      }
+
+      .effect-btn {
+        padding: 10px 16px;
+        font-size: 1rem;
+      }
+
+      .btn-round {
+        width: 64px;
+        height: 64px;
+      }
+
+      .btn-clear {
+        width: 48px;
+        height: 48px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <button class="btn-fullscreen" onclick="toggleFullscreen()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+    </svg>
+  </button>
+
+  <div class="container">
+    <div class="status-text" id="statusText">Kliknij klawisz aby odtworzyc dzwiek</div>
+
+    <div class="controls-area" id="effectsRow">
+      <button class="effect-btn" data-effect="chipmunk">🐿️ Wiewiorka</button>
+      <button class="effect-btn" data-effect="deep">🐻 Mis</button>
+      <button class="effect-btn" data-effect="robot">🤖 Robot</button>
+      <button class="effect-btn" data-effect="echo">🏔️ Echo</button>
+      <button class="effect-btn" data-effect="reverse">⏪ Wspak</button>
+      <button class="btn-round btn-record" id="recordBtn" onclick="toggleRecordMode()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          <line x1="12" y1="19" x2="12" y2="23"/>
+          <line x1="8" y1="23" x2="16" y2="23"/>
+        </svg>
+      </button>
+      <button class="btn-round btn-clear" onclick="clearAll()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 6h18"/>
+          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="keys-row" id="keysRow"></div>
+  </div>
+
+  <div class="countdown-overlay" id="countdownOverlay">
+    <div class="countdown-number" id="countdownNumber"></div>
+  </div>
+
+  <script>
+    // ============ STATE ============
+    const KEY_COUNT = 12;
+    const DB_NAME = 'PianinoDB';
+    const DB_VERSION = 1;
+    const STORE_NAME = 'sounds';
+
+    let db = null;
+    let keyData = {};
+    let isRecordMode = false;
+    let isCountingDown = false;
+    let currentRecordingKey = null;
+    let mediaRecorder = null;
+    let recordedChunks = [];
+
+    let activeEffects = {
+      chipmunk: false,
+      deep: false,
+      robot: false,
+      echo: false,
+      reverse: false
+    };
+
+    const statusText = document.getElementById('statusText');
+    const keysRow = document.getElementById('keysRow');
+    const recordBtn = document.getElementById('recordBtn');
+    const effectsRow = document.getElementById('effectsRow');
+    const countdownOverlay = document.getElementById('countdownOverlay');
+    const countdownNumber = document.getElementById('countdownNumber');
+
+    // ============ INIT ============
+    document.addEventListener('DOMContentLoaded', initApp);
+
+    async function initApp() {
+      await initDB();
+      await loadAllKeys();
+      renderKeys();
+    }
+
+    // ============ INDEXEDDB ============
+    function initDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => { db = request.result; resolve(); };
+        request.onupgradeneeded = (e) => {
+          const database = e.target.result;
+          if (!database.objectStoreNames.contains(STORE_NAME)) {
+            database.createObjectStore(STORE_NAME, { keyPath: 'keyId' });
+          }
+        };
+      });
+    }
+
+    function loadAllKeys() {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.getAll();
+        request.onsuccess = () => {
+          keyData = {};
+          for (const record of request.result) {
+            keyData[record.keyId] = record;
+          }
+          resolve();
+        };
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function saveSound(keyId, audioData, mimeType) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        const record = { keyId, audioData, mimeType };
+        const request = store.put(record);
+        request.onsuccess = () => {
+          keyData[keyId] = record;
+          resolve();
+        };
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function deleteSound(keyId) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.delete(keyId);
+        request.onsuccess = () => {
+          delete keyData[keyId];
+          resolve();
+        };
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function clearAllSounds() {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        const store = tx.objectStore(STORE_NAME);
+        const request = store.clear();
+        request.onsuccess = () => {
+          keyData = {};
+          resolve();
+        };
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    // ============ RENDER KEYS ============
+    function renderKeys() {
+      keysRow.innerHTML = '';
+      for (let i = 0; i < KEY_COUNT; i++) {
+        const keyId = 'key-' + i;
+        const btn = document.createElement('button');
+        btn.className = 'key';
+        btn.id = keyId;
+        btn.textContent = i + 1;
+
+        if (keyData[keyId]) {
+          btn.classList.add('has-sound');
+        }
+        if (currentRecordingKey === keyId) {
+          btn.classList.add('recording');
+        }
+
+        btn.addEventListener('touchstart', (e) => {
+          e.preventDefault();
+          onKeyTap(keyId);
+        }, { passive: false });
+
+        btn.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          onKeyTap(keyId);
+        });
+
+        keysRow.appendChild(btn);
+      }
+    }
+
+    // ============ KEY TAP HANDLER ============
+    function onKeyTap(keyId) {
+      if (isCountingDown) return;
+
+      if (isRecordMode) {
+        if (currentRecordingKey === keyId) {
+          stopRecording();
+        } else if (currentRecordingKey !== null) {
+          stopRecording().then(() => startCountdownAndRecord(keyId));
+        } else {
+          startCountdownAndRecord(keyId);
+        }
+      } else {
+        if (keyData[keyId]) {
+          playSound(keyId);
+        }
+      }
+    }
+
+    // ============ RECORD MODE ============
+    function toggleRecordMode() {
+      if (isCountingDown) return;
+      if (currentRecordingKey !== null) {
+        stopRecording();
+      }
+      isRecordMode = !isRecordMode;
+      document.body.classList.toggle('record-mode', isRecordMode);
+      recordBtn.classList.toggle('active', isRecordMode);
+
+      if (isRecordMode) {
+        recordBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="6" y="6" width="12" height="12" rx="2"/>
+          </svg>`;
+        setStatus('Dotknij klawisz aby nagrac dzwiek', 'recording');
+      } else {
+        recordBtn.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/>
+            <line x1="8" y1="23" x2="16" y2="23"/>
+          </svg>`;
+        setStatus('Kliknij klawisz aby odtworzyc dzwiek', '');
+      }
+    }
+
+    // ============ COUNTDOWN ============
+    function showCountdown() {
+      return new Promise((resolve) => {
+        isCountingDown = true;
+        countdownOverlay.classList.add('active');
+        let count = 3;
+
+        function showNext() {
+          if (count <= 0) {
+            countdownOverlay.classList.remove('active');
+            isCountingDown = false;
+            resolve();
+            return;
+          }
+          countdownNumber.textContent = count;
+          countdownNumber.style.animation = 'none';
+          // Force reflow to restart animation
+          countdownNumber.offsetHeight;
+          countdownNumber.style.animation = 'countdownPop 0.9s ease-out';
+          count--;
+          setTimeout(showNext, 900);
+        }
+
+        showNext();
+      });
+    }
+
+    // ============ RECORDING ============
+    async function startCountdownAndRecord(keyId) {
+      // Highlight the key during countdown
+      const keyEl = document.getElementById(keyId);
+      if (keyEl) keyEl.classList.add('recording');
+      setStatus('Przygotuj sie...', 'recording');
+
+      await showCountdown();
+
+      // Check if record mode was turned off during countdown
+      if (!isRecordMode) {
+        if (keyEl) keyEl.classList.remove('recording');
+        return;
+      }
+
+      await startRecording(keyId);
+    }
+
+    async function startRecording(keyId) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        currentRecordingKey = keyId;
+        recordedChunks = [];
+
+        const mimeType = getSupportedMimeType();
+        mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) recordedChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = async () => {
+          stream.getTracks().forEach(t => t.stop());
+          await processAndSaveChunks(keyId);
+          currentRecordingKey = null;
+          renderKeys();
+          if (isRecordMode) {
+            setStatus('Dotknij klawisz aby nagrac dzwiek', 'recording');
+          }
+        };
+
+        mediaRecorder.start(100);
+
+        const keyEl = document.getElementById(keyId);
+        if (keyEl) keyEl.classList.add('recording');
+        setStatus('Nagrywanie... dotknij ponownie aby zakonczyc', 'recording');
+
+      } catch (err) {
+        currentRecordingKey = null;
+        renderKeys();
+        setStatus('Brak dostepu do mikrofonu!', '');
+        console.error('Mic error:', err);
+      }
+    }
+
+    function stopRecording() {
+      return new Promise((resolve) => {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+          mediaRecorder.onstop = async function () {
+            if (mediaRecorder.stream) {
+              mediaRecorder.stream.getTracks().forEach(t => t.stop());
+            }
+            await processAndSaveChunks(currentRecordingKey);
+            currentRecordingKey = null;
+            renderKeys();
+            if (isRecordMode) {
+              setStatus('Dotknij klawisz aby nagrac dzwiek', 'recording');
+            }
+            resolve();
+          };
+          mediaRecorder.stop();
+        } else {
+          currentRecordingKey = null;
+          renderKeys();
+          resolve();
+        }
+      });
+    }
+
+    // ============ PROCESS & SAVE RECORDED AUDIO ============
+    async function processAndSaveChunks(keyId) {
+      if (recordedChunks.length === 0 || !keyId) return;
+
+      try {
+        const blob = new Blob(recordedChunks, { type: recordedChunks[0].type });
+        const arrayBuffer = await blob.arrayBuffer();
+
+        // Decode to AudioBuffer for trimming
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+        const trimmed = trimSilence(ctx, audioBuffer);
+        ctx.close().catch(() => {});
+
+        // Convert trimmed buffer to WAV and save
+        const wavBuffer = audioBufferToWav(trimmed);
+        const base64 = arrayBufferToBase64(wavBuffer);
+        await saveSound(keyId, base64, 'audio/wav');
+      } catch (err) {
+        // Fallback: save raw recording without trimming
+        console.warn('Trim failed, saving raw:', err);
+        const blob = new Blob(recordedChunks, { type: recordedChunks[0].type });
+        const arrayBuffer = await blob.arrayBuffer();
+        const base64 = arrayBufferToBase64(arrayBuffer);
+        await saveSound(keyId, base64, blob.type);
+      }
+    }
+
+    // ============ SILENCE TRIMMING ============
+    function trimSilence(ctx, audioBuffer, threshold = 0.02) {
+      const channels = audioBuffer.numberOfChannels;
+      const sampleRate = audioBuffer.sampleRate;
+      const length = audioBuffer.length;
+      const windowSize = Math.floor(sampleRate * 0.03); // 30ms window
+      const stepSize = Math.floor(windowSize / 2);       // 50% overlap
+
+      function calculateRMS(startSample) {
+        let sumSquares = 0;
+        let count = 0;
+        for (let i = startSample; i < Math.min(startSample + windowSize, length); i++) {
+          for (let ch = 0; ch < channels; ch++) {
+            const sample = audioBuffer.getChannelData(ch)[i];
+            sumSquares += sample * sample;
+            count++;
+          }
+        }
+        return Math.sqrt(sumSquares / count);
+      }
+
+      // Find first non-silent sample
+      let start = 0;
+      for (let i = 0; i < length - windowSize; i += stepSize) {
+        if (calculateRMS(i) > threshold) {
+          start = Math.max(0, i - Math.floor(sampleRate * 0.05)); // 50ms padding
+          break;
+        }
+      }
+
+      // Find last non-silent sample
+      let end = length;
+      for (let i = length - windowSize; i >= start; i -= stepSize) {
+        if (calculateRMS(i) > threshold) {
+          end = Math.min(length, i + windowSize + Math.floor(sampleRate * 0.1)); // 100ms padding
+          break;
+        }
+      }
+
+      if (end <= start) return audioBuffer;
+
+      const trimmedLength = end - start;
+      const trimmed = ctx.createBuffer(channels, trimmedLength, sampleRate);
+      for (let ch = 0; ch < channels; ch++) {
+        const src = audioBuffer.getChannelData(ch);
+        const dst = trimmed.getChannelData(ch);
+        for (let i = 0; i < trimmedLength; i++) {
+          dst[i] = src[start + i];
+        }
+      }
+
+      console.log(`Trimmed: ${(length / sampleRate).toFixed(2)}s -> ${(trimmedLength / sampleRate).toFixed(2)}s`);
+      return trimmed;
+    }
+
+    // ============ WAV ENCODING ============
+    function audioBufferToWav(audioBuffer) {
+      const numChannels = audioBuffer.numberOfChannels;
+      const sampleRate = audioBuffer.sampleRate;
+      const bitDepth = 16;
+      const bytesPerSample = bitDepth / 8;
+      const blockAlign = numChannels * bytesPerSample;
+
+      const samples = [];
+      for (let i = 0; i < audioBuffer.length; i++) {
+        for (let ch = 0; ch < numChannels; ch++) {
+          const s = Math.max(-1, Math.min(1, audioBuffer.getChannelData(ch)[i]));
+          samples.push(s < 0 ? s * 0x8000 : s * 0x7FFF);
+        }
+      }
+
+      const dataLength = samples.length * bytesPerSample;
+      const buffer = new ArrayBuffer(44 + dataLength);
+      const view = new DataView(buffer);
+
+      function writeStr(offset, str) {
+        for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+      }
+
+      writeStr(0, 'RIFF');
+      view.setUint32(4, 36 + dataLength, true);
+      writeStr(8, 'WAVE');
+      writeStr(12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true); // PCM
+      view.setUint16(22, numChannels, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * blockAlign, true);
+      view.setUint16(32, blockAlign, true);
+      view.setUint16(34, bitDepth, true);
+      writeStr(36, 'data');
+      view.setUint32(40, dataLength, true);
+
+      let offset = 44;
+      for (let i = 0; i < samples.length; i++) {
+        view.setInt16(offset, samples[i], true);
+        offset += 2;
+      }
+
+      return buffer;
+    }
+
+    // ============ PLAYBACK WITH EFFECTS ============
+    async function playSound(keyId) {
+      const data = keyData[keyId];
+      if (!data || !data.audioData) return;
+
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const arrayBuffer = base64ToArrayBuffer(data.audioData);
+        const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+
+        let buffer = audioBuffer;
+
+        if (activeEffects.reverse) {
+          buffer = reverseBuffer(ctx, buffer);
+        }
+
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+
+        let rate = 1.0;
+        if (activeEffects.chipmunk) rate *= 1.8;
+        if (activeEffects.deep) rate *= 0.55;
+        source.playbackRate.value = rate;
+
+        let lastNode = source;
+
+        if (activeEffects.robot) {
+          const osc = ctx.createOscillator();
+          osc.type = 'square';
+          osc.frequency.value = 50;
+          const gainMod = ctx.createGain();
+          gainMod.gain.value = 0;
+          osc.connect(gainMod.gain);
+          osc.start();
+
+          const waveshaper = ctx.createWaveShaper();
+          const curve = new Float32Array(256);
+          for (let i = 0; i < 256; i++) {
+            const x = (i / 128) - 1;
+            curve[i] = Math.sign(x) * Math.pow(Math.abs(x), 0.5);
+          }
+          waveshaper.curve = curve;
+
+          lastNode.connect(waveshaper);
+          waveshaper.connect(gainMod);
+          lastNode = gainMod;
+
+          source.addEventListener('ended', () => osc.stop());
+        }
+
+        if (activeEffects.echo) {
+          const delay1 = ctx.createDelay(1.0);
+          delay1.delayTime.value = 0.25;
+          const feedback1 = ctx.createGain();
+          feedback1.gain.value = 0.5;
+
+          const delay2 = ctx.createDelay(1.0);
+          delay2.delayTime.value = 0.5;
+          const feedback2 = ctx.createGain();
+          feedback2.gain.value = 0.3;
+
+          const merger = ctx.createGain();
+          merger.gain.value = 1;
+
+          lastNode.connect(merger);
+          lastNode.connect(delay1);
+          delay1.connect(feedback1);
+          feedback1.connect(merger);
+          feedback1.connect(delay1);
+          lastNode.connect(delay2);
+          delay2.connect(feedback2);
+          feedback2.connect(merger);
+
+          lastNode = merger;
+        }
+
+        lastNode.connect(ctx.destination);
+
+        // Visual feedback
+        const keyEl = document.getElementById(keyId);
+        if (keyEl) keyEl.classList.add('key-playing');
+
+        source.start(0);
+
+        source.addEventListener('ended', () => {
+          if (keyEl) keyEl.classList.remove('key-playing');
+          const extraTime = activeEffects.echo ? 1500 : 100;
+          setTimeout(() => ctx.close().catch(() => {}), extraTime);
+        });
+
+      } catch (err) {
+        console.error('Playback error:', err);
+      }
+    }
+
+    // ============ EFFECTS TOGGLE ============
+    effectsRow.addEventListener('click', (e) => {
+      const btn = e.target.closest('.effect-btn');
+      if (!btn) return;
+      const effect = btn.dataset.effect;
+      activeEffects[effect] = !activeEffects[effect];
+      btn.classList.toggle('active', activeEffects[effect]);
+    });
+
+    // ============ CLEAR ALL ============
+    async function clearAll() {
+      if (!confirm('Wyczysc wszystkie nagrane dzwieki?')) return;
+      if (currentRecordingKey !== null) {
+        await stopRecording();
+      }
+      await clearAllSounds();
+      renderKeys();
+      setStatus(isRecordMode ? 'Dotknij klawisz aby nagrac dzwiek' : 'Kliknij klawisz aby odtworzyc dzwiek', isRecordMode ? 'recording' : '');
+    }
+
+    // ============ FULLSCREEN ============
+    function toggleFullscreen() {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        const el = document.documentElement;
+        if (el.requestFullscreen) {
+          el.requestFullscreen();
+        } else if (el.webkitRequestFullscreen) {
+          el.webkitRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+      }
+    }
+
+    // ============ AUDIO UTILITIES ============
+    function getSupportedMimeType() {
+      const types = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'];
+      for (const type of types) {
+        if (MediaRecorder.isTypeSupported(type)) return type;
+      }
+      return '';
+    }
+
+    function arrayBufferToBase64(buffer) {
+      let binary = '';
+      const bytes = new Uint8Array(buffer);
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      return btoa(binary);
+    }
+
+    function base64ToArrayBuffer(base64) {
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return bytes.buffer;
+    }
+
+    function reverseBuffer(ctx, buffer) {
+      const reversed = ctx.createBuffer(
+        buffer.numberOfChannels,
+        buffer.length,
+        buffer.sampleRate
+      );
+      for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+        const input = buffer.getChannelData(ch);
+        const output = reversed.getChannelData(ch);
+        for (let i = 0; i < input.length; i++) {
+          output[i] = input[input.length - 1 - i];
+        }
+      }
+      return reversed;
+    }
+
+    function setStatus(text, cls) {
+      statusText.textContent = text;
+      statusText.className = 'status-text';
+      if (cls) statusText.classList.add(cls);
+    }
+  </script>
+</body>
+
+</html>

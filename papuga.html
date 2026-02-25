@@ -221,10 +221,47 @@
       height: 40px;
     }
 
+    .btn-fullscreen {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.7);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    .btn-fullscreen:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .btn-fullscreen:active {
+      transform: scale(0.95);
+    }
+
+    .btn-fullscreen svg {
+      width: 20px;
+      height: 20px;
+    }
+
   </style>
 </head>
 
 <body>
+  <button class="btn-fullscreen" onclick="toggleFullscreen()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+    </svg>
+  </button>
+
   <div class="container">
     <div class="parrot-area" id="parrotArea">
       <span class="parrot-icon">🦜</span>
@@ -605,6 +642,17 @@
       statusText.textContent = text;
       statusText.className = 'status-text';
       if (cls) statusText.classList.add(cls);
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        const el = document.documentElement;
+        if (el.requestFullscreen) el.requestFullscreen();
+        else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      }
     }
   </script>
 </body>
