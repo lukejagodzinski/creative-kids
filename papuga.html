@@ -578,6 +578,7 @@
 
       try {
         const playCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (playCtx.state === 'suspended') await playCtx.resume();
         const arrayBuffer = await blob.arrayBuffer();
         const audioBuffer = await playCtx.decodeAudioData(arrayBuffer);
 
